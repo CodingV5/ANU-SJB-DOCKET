@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "171580750009",
+    "project_id": "anu-sjb-docket",
+    "storage_bucket": "anu-sjb-docket.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:171580750009:android:143ea1950c97a02822c368",
+        "android_client_info": {
+          "package_name": "com.anusjb.docket"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "171580750009-r6r0kc2pb41f4io0h2vh2hg2rchtb2ll.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.anusjb.docket",
+            "certificate_hash": "5a2fb61b8d1c5c70b3f80da69deb69f3419006ae"
+          }
+        },
+        {
+          "client_id": "171580750009-vbe9vm8o3g680ln0j5eac7aoh4f7bcap.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDwaGMo5exTbjHHEjDhjgzfrKHliFlEjmY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "171580750009-vbe9vm8o3g680ln0j5eac7aoh4f7bcap.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

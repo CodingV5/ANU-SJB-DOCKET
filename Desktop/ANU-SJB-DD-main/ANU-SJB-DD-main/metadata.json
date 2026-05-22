@@ -1,0 +1,8 @@
+{
+  "name": "ANU SJB DOCKET",
+  "description": "Official Judicial Management System for the ANU Student Body, managing petitions, summons, and legal archives.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

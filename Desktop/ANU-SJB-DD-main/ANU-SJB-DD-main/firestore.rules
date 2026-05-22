@@ -1,0 +1,164 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function getUserData(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function hasRole(role) {
+      return isSignedIn() && (
+        getUserData(request.auth.uid).role == role ||
+        (request.auth.token.email == 'nobleaidoo5@gmail.com' && isEmailVerified())
+      );
+    }
+
+    function isJudge() {
+      return hasRole('judge');
+    }
+
+    function isClerk() {
+      return hasRole('court_clerk');
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // --- User Validation ---
+    function isValidUser(data) {
+      return data.email is string && data.email.size() > 0 && data.email.size() <= 256 &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.photoURL is string && data.photoURL.size() <= 500 &&
+             data.role in ['petitioner', 'judge', 'court_clerk'] &&
+             data.keys().hasAll(['email', 'role']);
+    }
+
+    match /users/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isJudge());
+      allow list: if isEmailVerified() && isJudge();
+      
+      allow create: if isSignedIn() && request.auth.uid == userId && 
+                    isValidUser(incoming()) && 
+                    (incoming().role == 'petitioner' || (request.auth.token.email == 'nobleaidoo5@gmail.com' && incoming().role == 'judge'));
+      
+      allow update: if isSignedIn() && (
+                    // Regular users can update their own profile EXCEPT for their email and role
+                    (request.auth.uid == userId &&
+                      isValidUser(incoming()) &&
+                      incoming().role == existing().role &&
+                      incoming().email == existing().email &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['hasCompletedOnboarding', 'displayName', 'photoURL', 'fcmToken'])) ||
+                    // ONLY a verified Judge can change someone's role
+                    (isEmailVerified() && isJudge() &&
+                      isValidUser(incoming()) &&
+                      incoming().email == existing().email &&
+                      incoming().diff(existing()).affectedKeys().hasOnly(['role']))
+                  );
+    }
+
+    // --- Case Validation ---
+    function isValidCase(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.description is string && data.description.size() > 0 && data.description.size() <= 10000 &&
+             data.petitionerId == request.auth.uid &&
+             data.status in ['pending', 'reviewing', 'hearing', 'resolved', 'dismissed'] &&
+             data.filedAt is timestamp &&
+             data.updatedAt is timestamp &&
+             data.keys().hasAll(['title', 'description', 'petitionerId', 'status', 'filedAt', 'updatedAt']);
+    }
+
+    match /cases/{caseId} {
+      allow get: if isSignedIn() && (existing().petitionerId == request.auth.uid || isJudge() || isClerk());
+      allow list: if isSignedIn() && (resource.data.petitionerId == request.auth.uid || isJudge() || isClerk());
+
+      allow create: if isEmailVerified() && isValidId(caseId) && isValidCase(incoming()) && 
+                    incoming().status == 'pending' && 
+                    incoming().filedAt == request.time &&
+                    incoming().updatedAt == request.time;
+      
+      allow update: if isEmailVerified() && (
+        (request.auth.uid == existing().petitionerId && 
+         existing().status == 'pending' && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'description', 'updatedAt']) &&
+         incoming().updatedAt == request.time) ||
+        ((isJudge() || isClerk()) && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']) &&
+         existing().status != 'resolved' && existing().status != 'dismissed' &&
+         incoming().updatedAt == request.time)
+      );
+
+      allow delete: if isEmailVerified() && isJudge();
+    }
+
+    // --- Precedent Archive ---
+    function isValidPrecedent(data) {
+       return data.title is string && data.title.size() > 0 && data.title.size() <= 256 &&
+              data.summary is string && data.summary.size() <= 2000 &&
+              data.ruling is string && data.ruling.size() <= 10000 &&
+              data.date is timestamp;
+    }
+
+    match /precedents/{precedentId} {
+      allow read: if isSignedIn() && (isJudge() || isClerk());
+      allow create: if isEmailVerified() && (isJudge() || isClerk()) && isValidPrecedent(incoming());
+      allow update: if isEmailVerified() && (isJudge() || isClerk()) && isValidPrecedent(incoming());
+      allow delete: if isEmailVerified() && isJudge();
+    }
+
+    // --- Summons ---
+    function isValidSummons(data) {
+      return isValidId(data.caseId) &&
+             data.caseTitle is string && data.caseTitle.size() <= 200 &&
+             data.recipientEmail is string && data.recipientEmail.size() <= 256 &&
+             data.recipientName is string && data.recipientName.size() <= 100 &&
+             data.status in ['delivered', 'read', 'acknowledged'] &&
+             data.sentAt is timestamp;
+    }
+
+    match /summons/{summonId} {
+      allow get, list: if isSignedIn() && (
+        isJudge() || 
+        isClerk() || 
+        resource.data.recipientEmail == request.auth.token.email
+      );
+      allow create: if isEmailVerified() && (isJudge() || isClerk()) && 
+                    isValidSummons(incoming()) && 
+                    exists(/databases/$(database)/documents/cases/$(incoming().caseId));
+      allow update: if isEmailVerified() && (
+        ((isJudge() || isClerk()) && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'notes', 'recipientName', 'recipientEmail'])) ||
+        (existing().recipientEmail == request.auth.token.email && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status']) &&
+         (existing().status == 'delivered' || existing().status == 'read') &&
+         (incoming().status == 'read' || incoming().status == 'acknowledged'))
+      );
+      allow delete: if isEmailVerified() && isJudge();
+    }
+  }
+}

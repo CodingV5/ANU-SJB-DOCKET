@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "Case": {
+      "title": "Case",
+      "description": "A judicial case or petition",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Short title of the case" },
+        "description": { "type": "string", "description": "Full details of the petition" },
+        "petitionerId": { "type": "string", "description": "UID of the user who filed it" },
+        "petitionerName": { "type": "string", "description": "Name of the petitioner" },
+        "respondentName": { "type": "string", "description": "Name of the respondent" },
+        "status": { 
+          "type": "string", 
+          "enum": ["pending", "reviewing", "hearing", "resolved", "dismissed"],
+          "description": "Current state of the judicial process"
+        },
+        "filedAt": { "type": "string", "format": "date-time", "description": "Timestamp of filing" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Last update timestamp" }
+      },
+      "required": ["title", "description", "petitionerId", "status", "filedAt"]
+    },
+    "Precedent": {
+      "title": "Precedent",
+      "description": "A historical ruling or legal archive entry",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Case name or title" },
+        "summary": { "type": "string", "description": "Brief summary of the facts" },
+        "ruling": { "type": "string", "description": "The judicial decision and legal basis" },
+        "tags": { "type": "array", "description": "Legal categories (e.g., Constitutional, Tort)" },
+        "date": { "type": "string", "format": "date-time", "description": "Date of the ruling" }
+      },
+      "required": ["title", "summary", "ruling", "date"]
+    },
+    "Summon": {
+      "title": "Summon",
+      "description": "An automated judicial notification",
+      "type": "object",
+      "properties": {
+        "caseId": { "type": "string", "description": "Reference to the case" },
+        "caseTitle": { "type": "string", "description": "Title of the case for notification" },
+        "recipientEmail": { "type": "string", "description": "Email of the recipient" },
+        "recipientName": { "type": "string", "description": "Name of the recipient" },
+        "status": { 
+          "type": "string", 
+          "enum": ["delivered", "read", "acknowledged"],
+          "description": "Delivery status of the summon"
+        },
+        "sentAt": { "type": "string", "format": "date-time", "description": "Timestamp when sent" }
+      },
+      "required": ["caseId", "recipientEmail", "status", "sentAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile and permissions",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { 
+          "type": "string", 
+          "enum": ["petitioner", "judge", "court_clerk"],
+          "description": "User role in the system"
+        }
+      },
+      "required": ["email", "role"]
+    }
+  },
+  "firestore": {
+    "/cases/{caseId}": {
+      "schema": "Case",
+      "description": "Collection of all legal cases"
+    },
+    "/precedents/{precedentId}": {
+      "schema": "Precedent",
+      "description": "Archive of past rulings"
+    },
+    "/summons/{summonId}": {
+      "schema": "Summon",
+      "description": "History of summons issued"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    }
+  }
+}
