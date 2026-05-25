@@ -1,21 +1,21 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
-  --color-brand-primary: #4f46e5;
-  --color-brand-secondary: #1e293b;
-  --color-surface: #f8fafc;
-  --color-border: #e2e8f0;
+  --color-brand-primary: #1e293b; /* Deep Slate */
+  --color-brand-accent: #4f46e5;  /* Professional Indigo */
+  --color-surface-light: #f8fafc;
+  --color-surface-dark: #020617;
 }
 
 @variant dark (&:where(.dark, .dark *));
 
 @layer base {
   * {
-    @apply transition-colors duration-500 ease-in-out;
+    @apply transition-colors duration-200 ease-out;
   }
 
   body {
@@ -26,42 +26,41 @@
     @apply bg-slate-950 text-slate-100 selection:bg-indigo-900 selection:text-indigo-100;
   }
 
-  h1, h2, h3, h4 {
-    @apply tracking-tight font-bold;
+  h1, h2, h3 {
+    @apply tracking-tight font-extrabold;
   }
 }
 
 @layer components {
-  .glass {
-    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-sm;
+  /* Crisp Professional Cards */
+  .card-professional {
+    @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-[0_1px_3px_0_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)];
   }
 
-  .dark .glass {
-    @apply bg-slate-900/80 border-white/5;
+  .dark .card-professional {
+    @apply shadow-none border-slate-800/50;
   }
 
-  .card-technical {
-    @apply bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md hover:border-indigo-200 transition-all;
+  /* Structural Sidebar/Navigation Item */
+  .nav-link {
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all;
   }
 
-  .dark .card-technical {
-    @apply bg-slate-900 border-slate-800 hover:border-indigo-900;
+  .nav-link-active {
+    @apply bg-slate-900 dark:bg-indigo-600 text-white shadow-sm;
   }
 
-  .btn-primary {
-    @apply px-4 py-2 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-sm;
+  .nav-link-inactive {
+    @apply text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white;
   }
 
-  .btn-secondary {
-    @apply px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-50 hover:border-slate-300 active:scale-95 transition-all;
+  /* Data Table Styling */
+  .judicial-table th {
+    @apply px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800;
   }
 
-  .dark .btn-secondary {
-    @apply bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700;
-  }
-
-  .nav-item-active {
-    @apply text-indigo-600 bg-indigo-50/50 relative after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-indigo-600 after:rounded-full;
+  .judicial-table td {
+    @apply px-6 py-4 border-b border-slate-50 dark:border-slate-900/50;
   }
 }
 
