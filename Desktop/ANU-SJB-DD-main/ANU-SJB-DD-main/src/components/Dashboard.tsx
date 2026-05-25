@@ -50,8 +50,10 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
     setSummarizing(true);
     setAiBrief(null);
     try {
-      // Automatic detection: works on Localhost, IP, and Render/Netlify
-      const serverUrl = window.location.origin;
+      // Use the live Render URL for native mobile, and automatic origin for web
+      const serverUrl = Capacitor.isNativePlatform()
+        ? 'https://anu-sjb-docket.onrender.com'
+        : window.location.origin;
 
       const response = await fetch(`${serverUrl}/api/summarize-case`, {
         method: 'POST',

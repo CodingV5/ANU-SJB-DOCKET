@@ -3,6 +3,7 @@ import { db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { collection, query, where, onSnapshot, orderBy, Timestamp, updateDoc, doc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { Bell, Send, CheckCircle2, UserPlus, Loader2, Mail, ShieldAlert, Search as SearchIcon, ChevronDown, ChevronRight, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Capacitor } from '@capacitor/core';
 
 interface Summon {
   id: string;
@@ -52,21 +53,21 @@ export default function SummonsSystem({ user, onViewCase }: { user: any; onViewC
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-slate-200">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-slate-200 dark:border-slate-800">
         <div>
-          <h2 className="text-4xl font-black text-slate-900 tracking-tight uppercase flex items-center gap-4">
-            <div className="bg-indigo-600 p-2.5 rounded-2xl shadow-lg shadow-indigo-100">
+          <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight uppercase flex items-center gap-4">
+            <div className="bg-indigo-600 p-2.5 rounded-2xl shadow-lg shadow-indigo-100 dark:shadow-indigo-900/20">
               <Bell className="text-white" size={28} />
             </div>
             Summons Engine
           </h2>
-          <p className="text-slate-500 font-medium mt-2">Certified delivery and acknowledgment protocol for judicial proceedings</p>
+          <p className="text-slate-500 dark:text-slate-400 font-medium mt-2">Certified delivery and acknowledgment protocol for judicial proceedings</p>
         </div>
 
         {(user.role === 'judge' || user.role === 'court_clerk') && (
           <button
             onClick={() => setShowIssueForm(!showIssueForm)}
-            className="flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-wider text-xs hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
+            className="flex items-center gap-2 px-8 py-4 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-wider text-xs hover:bg-slate-800 dark:hover:bg-indigo-700 transition-all shadow-xl shadow-slate-200 dark:shadow-indigo-900/20 active:scale-95"
           >
             <UserPlus size={18} />
             Initiate Summons
@@ -102,7 +103,77 @@ export default function SummonsSystem({ user, onViewCase }: { user: any; onViewC
 }
 
 function IssueSummonForm({ onSuccess }: { onSuccess: () => void }) {
-// ... existing state ...
+  const [formData, setFormData] = useState({
+    caseId: '',
+    caseTitle: '',
+    recipientEmail: '',
+    recipientName: '',
+    notes: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowConfirm(true);
+  };
+
+  const processSubmission = async () => {
+    setShowConfirm(false);
+    setLoading(true);
+    try {
+      const summonData = {
+        ...formData,
+        status: 'delivered',
+        sentAt: serverTimestamp(),
+      };
+
+      const docRef = await addDoc(collection(db, 'summons'), summonData);
+
+      // Call our notification API via Render
+      try {
+        const serverUrl = Capacitor.isNativePlatform()
+          ? 'https://anu-sjb-docket.onrender.com'
+          : window.location.origin;
+
+        fetch(`${serverUrl}/api/notify-summon`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            recipientName: formData.recipientName,
+            recipientEmail: formData.recipientEmail,
+            caseTitle: formData.caseTitle,
+            caseId: formData.caseId
+          })
+        });
+      } catch (err) {
+        console.warn('Notification failed, but summon was issued:', err);
+      }
+
+      onSuccess();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'summons');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const [availableCases, setAvailableCases] = useState<any[]>([]);
+  const [showCaseList, setShowCaseList] = useState(false);
+  const [caseFilter, setCaseFilter] = useState('');
+
+  useEffect(() => {
+    const q = query(collection(db, 'cases'), orderBy('filedAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setAvailableCases(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const filteredCases = availableCases.filter(c =>
+    c.title.toLowerCase().includes(caseFilter.toLowerCase()) ||
+    c.id.toLowerCase().includes(caseFilter.toLowerCase())
+  );
 
   return (
     <motion.div
