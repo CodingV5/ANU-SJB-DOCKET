@@ -27,7 +27,7 @@ async function startServer() {
     console.warn('⚠️  Warning: GEMINI_API_KEY is not set in your .env file. AI features will fail.');
   }
   const app = express();
-  const PORT = 3000;
+  const PORT = process.env.PORT || 3000;
 
   app.use(express.json());
 

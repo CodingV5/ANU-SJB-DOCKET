@@ -50,10 +50,8 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
     setSummarizing(true);
     setAiBrief(null);
     try {
-      // Use explicit port 3000 for the backend API
-      const serverUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3000'
-        : 'http://192.168.139.239:3000';
+      // Automatic detection: works on Localhost, IP, and Render/Netlify
+      const serverUrl = window.location.origin;
 
       const response = await fetch(`${serverUrl}/api/summarize-case`, {
         method: 'POST',
