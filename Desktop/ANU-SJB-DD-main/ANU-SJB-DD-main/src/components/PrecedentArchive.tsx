@@ -50,7 +50,6 @@ export default function PrecedentArchive() {
 
   useEffect(() => {
     const q = query(collection(db, 'precedents'), orderBy('date', 'desc'));
-    
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -61,7 +60,6 @@ export default function PrecedentArchive() {
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'precedents');
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -75,24 +73,21 @@ export default function PrecedentArchive() {
   });
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-slate-200 dark:border-slate-800">
+    <div className="space-y-12">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="flex-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-black uppercase tracking-widest border border-slate-200 dark:border-slate-700 mb-3">
-            <Archive size={12} />
-            Institutional History
-          </div>
-          <h2 className="text-4xl font-black text-slate-900 dark:text-white tracking-tight uppercase">Judicial Archives</h2>
-          <p className="text-slate-500 dark:text-slate-400 font-medium mt-1"> Official library of SRC rulings, constitutional determinations, and legal precedents.</p>
+          <h2 className="text-sm font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-mono mb-2">Legal Precedents</h2>
+          <h1 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none">Judicial Archives</h1>
+          <p className="text-slate-500 dark:text-slate-400 font-medium mt-3 max-w-2xl">Official library of board rulings, constitutional determinations, and historical legal precedents.</p>
         </div>
 
         <div className="w-full md:w-96">
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" size={18} />
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={18} />
             <input
               type="text"
-              placeholder="Filter by ruling or subject..."
-              className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-medium shadow-sm text-sm text-slate-900 dark:text-white"
+              placeholder="Search rulings..."
+              className="w-full pl-14 pr-6 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all font-bold text-sm shadow-sm text-slate-900 dark:text-white"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -100,89 +95,78 @@ export default function PrecedentArchive() {
         </div>
       </div>
 
-      {/* Tags Filter */}
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setSelectedTag(null)}
-          className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
-            !selectedTag ? 'bg-slate-900 dark:bg-indigo-600 text-white border-slate-900 dark:border-indigo-600 shadow-lg shadow-slate-200 dark:shadow-indigo-900/20' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400'
+          className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
+            !selectedTag ? 'bg-slate-900 dark:bg-emerald-600 text-white border-slate-900 dark:border-emerald-600 shadow-xl' : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600'
           }`}
         >
-          Entire Registry
+          All Categories
         </button>
         {allTags.map(tag => (
           <button
             key={tag}
             onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
-            className={`px-5 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2 flex items-center gap-2 ${
-              tag === selectedTag ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-100' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400'
+            className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2 flex items-center gap-2 ${
+              tag === selectedTag ? 'bg-emerald-600 text-white border-emerald-600 shadow-xl' : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600'
             }`}
           >
-            <Tag size={12} className={tag === selectedTag ? 'text-indigo-200' : 'text-slate-300 dark:text-slate-500'} />
+            <Tag size={12} className={tag === selectedTag ? 'text-emerald-200' : 'text-slate-300'} />
             {tag}
           </button>
         ))}
       </div>
 
-      {/* Library Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {loading ? (
-          Array(4).fill(0).map((_, i) => (
-            <div key={i} className="h-64 bg-white dark:bg-slate-900 rounded-3xl animate-pulse" />
-          ))
+          Array(4).fill(0).map((_, i) => <div key={i} className="h-72 bg-white dark:bg-slate-900 rounded-[2.5rem] animate-pulse" />)
         ) : filtered.length > 0 ? (
           filtered.map((precedent) => (
             <motion.div
               key={precedent.id}
               layout
-              className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 p-10 hover:shadow-2xl dark:hover:shadow-none hover:border-indigo-100 dark:hover:border-indigo-900 transition-all group flex flex-col h-full relative overflow-hidden"
+              className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 p-12 hover:border-emerald-500/50 transition-all group relative overflow-hidden"
             >
-              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity text-slate-400 dark:text-slate-600">
-                <BookOpen size={120} />
+              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity text-slate-400 dark:text-slate-100">
+                <BookOpen size={160} />
               </div>
 
-              <div className="flex items-center justify-between mb-8 relative z-10">
-                <div className="flex items-center gap-3 text-[10px] font-black text-slate-400 dark:text-slate-500 font-mono tracking-[0.2em] uppercase bg-slate-50 dark:bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-100 dark:border-slate-800">
-                  <Calendar size={14} />
-                  {precedent.date.toDate().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                </div>
-                <div className="p-2.5 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl text-indigo-400 border border-indigo-100 dark:border-indigo-800 opacity-0 group-hover:opacity-100 transition-all">
-                  <BookOpen size={20} />
-                </div>
+              <div className="flex items-center gap-4 text-[10px] font-black text-slate-400 dark:text-slate-500 font-mono tracking-widest uppercase mb-10 relative z-10">
+                <Calendar size={14} />
+                {precedent.date.toDate().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                REF: {precedent.id.slice(0, 8)}
               </div>
               
-              <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-4 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors uppercase tracking-tight leading-tight relative z-10">
+              <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-6 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors uppercase tracking-tight leading-none relative z-10">
                 {precedent.title}
               </h3>
               
-              <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-8 flex-grow font-medium relative z-10">
+              <p className="text-slate-500 dark:text-slate-400 text-base leading-relaxed mb-10 flex-grow font-medium relative z-10">
                 {precedent.summary}
               </p>
 
-              <div className="flex flex-wrap gap-2 mb-10 relative z-10">
+              <div className="flex flex-wrap gap-2 mb-12 relative z-10">
                 {precedent.tags?.map(t => (
-                  <span key={t} className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1.5 rounded-xl uppercase tracking-widest border border-indigo-100 dark:border-indigo-800">
+                  <span key={t} className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20 px-4 py-1.5 rounded-xl uppercase tracking-widest border border-emerald-100 dark:border-emerald-900">
                     {t}
                   </span>
                 ))}
               </div>
 
-              <button className="mt-auto w-full py-5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-900 dark:hover:bg-indigo-600 text-slate-900 dark:text-slate-200 hover:text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-3 border border-slate-100 dark:border-slate-700 shadow-sm group-hover:shadow-lg active:scale-95 relative z-10">
+              <button className="w-full py-5 bg-slate-50 dark:bg-slate-800 hover:bg-slate-900 dark:hover:bg-emerald-600 text-slate-900 dark:text-slate-200 hover:text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-3 border border-slate-100 dark:border-slate-700 active:scale-95 relative z-10">
                 Examine Judicial Ruling
-                <ExternalLink size={16} className="opacity-50" />
+                <ExternalLink size={16} className="opacity-40" />
               </button>
             </motion.div>
           ))
         ) : (
-          <div className="lg:col-span-2 text-center py-20 bg-slate-50/50 dark:bg-slate-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
-            <Archive className="mx-auto text-slate-300 dark:text-slate-700 mb-4" size={48} />
-            <p className="text-slate-500 dark:text-slate-400 font-medium">No precedents found in the archive for this selection.</p>
-            <button 
-              onClick={seedData}
-              className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-bold flex items-center gap-2 mx-auto"
-            >
-              <Database size={16} />
-              Seed Demo Data
+          <div className="lg:col-span-2 text-center py-32 bg-slate-50/50 dark:bg-slate-900/50 rounded-[3rem] border-2 border-dashed border-slate-200 dark:border-slate-800">
+            <Archive className="mx-auto text-slate-200 dark:text-slate-700 mb-6" size={64} />
+            <p className="text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest text-xs mb-8">Registry record not found</p>
+            <button onClick={seedData} className="px-8 py-4 bg-emerald-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-emerald-900/20 active:scale-95 transition-all">
+              Initialize Seed Protocol
             </button>
           </div>
         )}

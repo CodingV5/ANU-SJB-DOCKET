@@ -175,16 +175,16 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
     <div className="space-y-12">
       {/* Dynamic Dashboard Header */}
       <div className="flex flex-col gap-2">
-        <h2 className="text-sm font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">Protocol Terminal</h2>
+        <h2 className="text-sm font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-mono">System Terminal</h2>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <h1 className="text-5xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
             {user.role === 'petitioner' ? 'Legal Portfolio' : 'Board Docket'}
           </h1>
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-900 p-1 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
             <input
               type="text"
               placeholder="Search sequence..."
-              className="bg-transparent pl-4 pr-2 py-2 text-sm outline-none font-bold min-w-[200px]"
+              className="bg-transparent pl-4 pr-2 py-2 text-sm outline-none font-bold min-w-[200px] text-slate-900 dark:text-white"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
             />
@@ -196,30 +196,28 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatCard label="DOCKET SIZE" value={stats.total} icon={<FileText />} color="text-slate-900 dark:text-white" />
-        <StatCard label="PENDING REVIEW" value={stats.pending} icon={<Clock />} color="text-indigo-600 dark:text-indigo-400" />
-        <StatCard label="DISPATCHED SUMMONS" value={stats.summons} icon={<Bell />} color="text-blue-600 dark:text-blue-400" />
+        <StatCard label="PENDING REVIEW" value={stats.pending} icon={<Clock />} color="text-emerald-600 dark:text-emerald-400" />
+        <StatCard label="SUMMONS" value={stats.summons} icon={<Bell />} color="text-blue-600 dark:text-blue-400" />
         <StatCard label="RESOLUTIONS" value={stats.resolved} icon={<CheckCircle2 />} color="text-emerald-600 dark:text-emerald-400" />
       </div>
 
       {/* Modern List View */}
-      <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div className=" न्यायिक-table w-full">
-          <div className="grid grid-cols-1 divide-y divide-slate-100 dark:divide-slate-800">
-            {loading ? (
-              <div className="p-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs animate-pulse">Syncing Judicial Ledger...</div>
-            ) : filteredCases.length > 0 ? (
-              filteredCases.map((caseItem) => (
-                <CaseRow key={caseItem.id} caseItem={caseItem} onClick={() => setSelectedCase(caseItem)} />
-              ))
-            ) : (
-              <div className="p-32 text-center">
-                <Archive size={48} className="mx-auto text-slate-200 mb-4" />
-                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No Records Found</p>
-              </div>
-            )}
-          </div>
+      <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
+        <div className="grid grid-cols-1 divide-y divide-slate-100 dark:divide-slate-800">
+          {loading ? (
+            <div className="p-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs animate-pulse">Syncing Judicial Ledger...</div>
+          ) : filteredCases.length > 0 ? (
+            filteredCases.map((caseItem) => (
+              <CaseRow key={caseItem.id} caseItem={caseItem} onClick={() => setSelectedCase(caseItem)} />
+            ))
+          ) : (
+            <div className="p-32 text-center">
+              <Archive size={48} className="mx-auto text-slate-200 dark:text-slate-700 mb-4" />
+              <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No Records Found</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -227,7 +225,7 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
       {selectedCase && (
         <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-8">
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={handleCloseModal} className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm" />
-          <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 30, stiffness: 300 }} className="relative bg-white dark:bg-slate-900 w-full max-w-4xl sm:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl flex flex-col max-h-[94vh] overflow-hidden border border-slate-200 dark:border-slate-800">
+          <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 30, stiffness: 300 }} className="relative bg-white dark:bg-slate-900 w-full max-w-4xl sm:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl flex flex-col max-h-[94vh] overflow-hidden border border-slate-200 dark:border-slate-800 transition-colors">
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               <div className="p-8 sm:p-16">
                 <div className="flex justify-between items-start mb-12">
@@ -238,19 +236,36 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
                       }`}>
                         {selectedCase.status}
                       </span>
-                      <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest">ID: {selectedCase.id}</span>
+                      <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-widest">ID: {selectedCase.id}</span>
                     </div>
                     <h3 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none">{selectedCase.title}</h3>
                   </div>
-                  <button onClick={handleCloseModal} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl text-slate-400 hover:text-slate-900 transition-colors"><X size={24} /></button>
+                  <div className="flex gap-2">
+                    {(user.role === 'judge' || user.role === 'court_clerk') && (
+                      <button onClick={() => getAiBrief(selectedCase)} disabled={summarizing} className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-900/20 active:scale-95 disabled:opacity-50">
+                        {summarizing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles size={20} />}
+                      </button>
+                    )}
+                    <button onClick={handleCloseModal} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"><X size={24} /></button>
+                  </div>
                 </div>
+
+                {aiBrief && (
+                  <div className="mb-12 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-900 rounded-3xl p-8">
+                    <div className="flex items-center gap-2 mb-4 text-emerald-600 dark:text-emerald-400">
+                      <Sparkles size={18} />
+                      <h4 className="text-[10px] font-black uppercase tracking-widest">AI Judicial Assistant</h4>
+                    </div>
+                    <div className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-medium">{aiBrief}</div>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
                   <div className="space-y-4">
                     <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Parties Involved</h4>
                     <div className="space-y-3">
                       <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                        <p className="text-[9px] font-bold text-indigo-500 uppercase mb-1">Petitioner Entity</p>
+                        <p className="text-[9px] font-bold text-emerald-500 uppercase mb-1">Petitioner Entity</p>
                         <p className="font-black text-slate-900 dark:text-white">{selectedCase.petitionerName}</p>
                       </div>
                       <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
@@ -261,14 +276,14 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
                   </div>
                   <div className="space-y-4">
                     <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Temporal Data</h4>
-                    <div className="p-8 bg-slate-900 rounded-3xl text-white border border-slate-800 shadow-xl space-y-4">
+                    <div className="p-8 bg-slate-900 dark:bg-slate-950 rounded-3xl text-white border border-slate-800 dark:border-slate-900 shadow-xl space-y-4">
                       <div className="flex justify-between border-b border-white/5 pb-3">
                         <span className="text-[10px] font-bold text-slate-500 uppercase">Filing Date</span>
                         <span className="text-[10px] font-mono">{formatTimestamp(selectedCase.filedAt)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-[10px] font-bold text-slate-500 uppercase">Last Activity</span>
-                        <span className="text-[10px] font-mono text-indigo-400">{formatTimestamp(selectedCase.updatedAt, 'time')}</span>
+                        <span className="text-[10px] font-mono text-emerald-400">{formatTimestamp(selectedCase.updatedAt, 'time')}</span>
                       </div>
                     </div>
                   </div>
@@ -276,17 +291,47 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
 
                 <div className="space-y-4 mb-16">
                   <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Petition Narrative</h4>
-                  <div className="p-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[2rem] text-slate-700 dark:text-slate-300 text-lg leading-relaxed italic font-medium">
+                  <div className="p-10 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-[2rem] text-slate-700 dark:text-slate-300 text-lg leading-relaxed italic font-medium transition-colors">
                     {selectedCase.description}
                   </div>
                 </div>
+
+                {selectedCase.finalDirective && (
+                  <div className="mb-16 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-500/20 rounded-[1.5rem] p-8">
+                    <div className="flex items-center gap-2 mb-4 text-emerald-600 dark:text-emerald-400">
+                      <ShieldCheck size={20} />
+                      <h4 className="text-[10px] font-black uppercase tracking-widest">Official Judicial Directive</h4>
+                    </div>
+                    <div className="text-slate-800 dark:text-slate-200 text-sm leading-relaxed font-bold italic">"{selectedCase.finalDirective}"</div>
+                  </div>
+                )}
               </div>
             </div>
 
             {(user.role === 'judge' || user.role === 'court_clerk') && selectedCase.status !== 'resolved' && (
               <div className="p-8 bg-slate-950 border-t border-white/5 flex flex-col sm:flex-row gap-4">
-                <button onClick={() => updateCaseStatus(selectedCase.id, 'reviewing')} className="px-8 py-4 bg-white/5 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] border border-white/10 hover:bg-white/10">Mark Review</button>
-                <button onClick={() => updateCaseStatus(selectedCase.id, 'resolved')} className="flex-1 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-indigo-900/40">Authorize Resolution</button>
+                <AnimatePresence>
+                  {showDirectiveInput ? (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex-1 space-y-4">
+                      <textarea
+                        autoFocus
+                        placeholder="Type the final ruling..."
+                        className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500/50 min-h-[100px] resize-none"
+                        value={directiveText}
+                        onChange={(e) => setDirectiveText(e.target.value)}
+                      />
+                      <div className="flex gap-2">
+                        <button onClick={() => setShowDirectiveInput(false)} className="px-4 py-2 bg-white/5 text-white/50 text-[9px] font-black uppercase rounded-lg">Cancel</button>
+                        <button onClick={() => updateCaseStatus(selectedCase.id, 'resolved')} className="flex-1 py-2 bg-emerald-600 text-white text-[9px] font-black uppercase rounded-lg">Confirm Resolution</button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <>
+                      <button onClick={() => updateCaseStatus(selectedCase.id, 'reviewing')} className="px-8 py-4 bg-white/5 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] border border-white/10 hover:bg-white/10">Mark Review</button>
+                      <button onClick={() => setShowDirectiveInput(true)} className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-emerald-900/40">Authorize Resolution</button>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             )}
           </motion.div>
@@ -298,14 +343,14 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
 
 function StatCard({ label, value, icon, color }: any) {
   return (
-    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm relative group hover:border-indigo-500/50 transition-all">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-2">{label}</p>
-          <p className={`text-4xl font-black ${color} tracking-tighter`}>{value}</p>
+    <div className="bg-white dark:bg-slate-900 p-5 sm:p-8 rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200 dark:border-slate-800 shadow-sm relative group hover:border-emerald-500/50 transition-all">
+      <div className="flex justify-between items-center sm:items-start gap-2">
+        <div className="min-w-0">
+          <p className="text-[8px] sm:text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em] sm:tracking-[0.2em] mb-1 sm:mb-2 truncate">{label}</p>
+          <p className={`text-2xl sm:text-4xl font-black ${color} tracking-tighter leading-none`}>{value}</p>
         </div>
-        <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-2xl text-slate-400 group-hover:text-indigo-600 transition-colors">
-          {React.cloneElement(icon as React.ReactElement, { size: 24 })}
+        <div className="p-2.5 sm:p-4 bg-slate-50 dark:bg-slate-800 rounded-xl sm:rounded-2xl text-slate-400 group-hover:text-emerald-600 transition-colors shrink-0">
+          {React.cloneElement(icon as React.ReactElement, { size: 20 })}
         </div>
       </div>
     </div>
@@ -314,31 +359,27 @@ function StatCard({ label, value, icon, color }: any) {
 
 function CaseRow({ caseItem, onClick }: any) {
   return (
-    <div onClick={onClick} className="px-10 py-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-all group">
+    <div onClick={onClick} className="px-8 sm:px-10 py-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-all group">
       <div className="flex items-center gap-6 flex-1">
-        <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+        <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-emerald-600 group-hover:text-white transition-all">
           <FileText size={20} />
         </div>
         <div>
-          <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-indigo-600 transition-colors">{caseItem.title}</h4>
+          <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-emerald-600 transition-colors">{caseItem.title}</h4>
           <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            <span className="text-indigo-500">{caseItem.petitionerName}</span>
-            <span className="w-1 h-1 bg-slate-200 rounded-full" />
+            <span className="text-emerald-500 dark:text-emerald-400">{caseItem.petitionerName}</span>
+            <span className="w-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full" />
             <span>ID: {caseItem.id.slice(0, 12)}</span>
           </div>
         </div>
       </div>
       <div className="flex items-center gap-8">
-        <div className="text-right hidden md:block">
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Last Modified</p>
-          <p className="text-xs font-bold text-slate-900 dark:text-slate-200">{new Date(caseItem.updatedAt?.toDate() || Date.now()).toLocaleDateString()}</p>
-        </div>
         <div className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border-2 ${
           caseItem.status === 'resolved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
         }`}>
           {caseItem.status}
         </div>
-        <ArrowUpRight size={20} className="text-slate-200 group-hover:text-slate-900 transition-colors" />
+        <ArrowUpRight size={20} className="text-slate-200 dark:text-slate-700 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
       </div>
     </div>
   );

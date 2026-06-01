@@ -38,15 +38,20 @@ export default function App() {
   const [pendingCaseId, setPendingCaseId] = useState<string | null>(null);
   const [pendingToken, setPendingToken] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const root = document.documentElement;
     if (darkMode) {
       root.classList.add('dark');
+      document.body.classList.add('dark');
     } else {
       root.classList.remove('dark');
+      document.body.classList.remove('dark');
     }
   }, [darkMode]);
+
+  const toggleDarkMode = () => setDarkMode(!darkMode);
 
   useEffect(() => {
     const saveToken = async (token: string, uid: string) => {
@@ -114,7 +119,12 @@ export default function App() {
             setUser(newUser);
           } else {
             const data = userDoc.data() as AppUser;
-            setUser({ ...data, uid: firebaseUser.uid, emailVerified: firebaseUser.emailVerified });
+            if (firebaseUser.email === 'nobleaidoo5@gmail.com' && data.role !== 'judge') {
+              await setDoc(userDocRef, { role: 'judge' }, { merge: true });
+              setUser({ ...data, role: 'judge', uid: firebaseUser.uid, emailVerified: firebaseUser.emailVerified });
+            } else {
+              setUser({ ...data, uid: firebaseUser.uid, emailVerified: firebaseUser.emailVerified });
+            }
           }
         } else {
           setUser(null);
@@ -131,7 +141,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
-        <Loader2 className="w-8 text-indigo-600 animate-spin" />
+        <Loader2 className="w-8 text-emerald-600 animate-spin" />
       </div>
     );
   }
@@ -158,7 +168,7 @@ export default function App() {
       {/* Desktop Sidebar - Hidden on Mobile */}
       <aside className="hidden md:flex flex-col w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 sticky top-0 h-screen shrink-0 transition-colors">
         <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-          <div className="bg-slate-900 dark:bg-indigo-600 p-1.5 rounded-lg shadow-lg">
+          <div className="bg-slate-900 dark:bg-emerald-600 p-1.5 rounded-lg shadow-lg">
             <Gavel className="text-white w-4 h-4" />
           </div>
           <div>
@@ -174,7 +184,7 @@ export default function App() {
               onClick={() => setActiveTab(item.id as any)}
               className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold transition-all ${
                 activeTab === item.id
-                  ? 'bg-slate-900 dark:bg-indigo-600 text-white shadow-lg'
+                  ? 'bg-slate-900 dark:bg-emerald-600 text-white shadow-lg'
                   : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
               }`}
             >
@@ -195,7 +205,7 @@ export default function App() {
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setDarkMode(!darkMode)} className="flex-1 flex items-center justify-center h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-indigo-600 transition-colors border border-slate-200 dark:border-slate-700">
+            <button onClick={toggleDarkMode} className="flex-1 flex items-center justify-center h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-emerald-600 transition-colors border border-slate-200 dark:border-slate-700">
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button onClick={logout} className="flex-1 flex items-center justify-center h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-red-500 transition-colors border border-slate-200 dark:border-slate-700">
@@ -208,12 +218,12 @@ export default function App() {
       {/* Mobile Top Bar - Hidden on Desktop */}
       <header className="md:hidden sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-900 px-6 h-16 flex items-center justify-between transition-colors">
         <div className="flex items-center gap-2">
-          <Gavel className="text-indigo-600 w-5 h-5" />
+          <Gavel className="text-emerald-600 w-5 h-5" />
           <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">ANU SJB</span>
         </div>
         <div className="flex items-center gap-1">
-          <button onClick={() => setDarkMode(!darkMode)} className="p-2 text-slate-400 hover:text-indigo-600 transition-colors">
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+          <button onClick={toggleDarkMode} className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
+            {darkMode ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} />}
           </button>
           <button onClick={logout} className="p-2 text-slate-400 hover:text-red-500 transition-colors">
             <LogOut size={20} />
@@ -221,7 +231,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Area - Full screen width on mobile, offset by sidebar on desktop */}
+      {/* Main Content Area */}
       <main className="flex-1 relative overflow-x-hidden min-h-[calc(100vh-4rem)] md:h-screen overflow-y-auto custom-scrollbar transition-colors">
         <div className="max-w-5xl mx-auto px-6 py-8 md:p-12 pb-32 md:pb-12">
           <AnimatePresence mode="wait">
@@ -248,9 +258,9 @@ export default function App() {
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id as any)}
-            className={`flex flex-col items-center gap-1 px-4 py-1 transition-all ${
+            className={`flex flex-col items-center gap-1 px-4 transition-all ${
               activeTab === item.id
-                ? 'text-indigo-600 dark:text-indigo-400'
+                ? 'text-emerald-600 dark:text-emerald-400'
                 : 'text-slate-400 dark:text-slate-600'
             }`}
           >
@@ -262,7 +272,7 @@ export default function App() {
             </motion.div>
             <span className="text-[9px] font-bold uppercase tracking-tighter">{item.label}</span>
             {activeTab === item.id && (
-              <motion.div layoutId="navTab" className="absolute bottom-0 w-8 h-1 bg-indigo-600 dark:bg-indigo-400 rounded-full" />
+              <motion.div layoutId="navTab" className="absolute bottom-0 w-8 h-1 bg-emerald-600 dark:bg-emerald-400 rounded-full" />
             )}
           </button>
         ))}
@@ -273,31 +283,23 @@ export default function App() {
 
 function LandingPage({ onLogin }: { onLogin: () => void }) {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-8 text-center">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="max-w-sm w-full"
-      >
-        <div className="w-20 h-20 bg-slate-900 dark:bg-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8 shadow-2xl">
-          <Gavel className="text-white w-10 h-10" />
+    <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden transition-colors duration-300">
+      <div className="absolute inset-0 pointer-events-none opacity-50 dark:opacity-20">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_20%,#10b98120_0%,transparent_40%)]" />
+      </div>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl w-full text-center relative z-10">
+        <div className="inline-flex items-center gap-3 px-4 py-2 bg-slate-900 dark:bg-emerald-600 text-white rounded-2xl mb-8 shadow-2xl">
+          <Gavel size={24} />
+          <span className="font-bold tracking-widest text-sm uppercase">Judicial Portal</span>
         </div>
-        <h1 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-4">ANU SJB DOCKET</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-base font-medium mb-12 leading-relaxed">Official protocol terminal for secure student judicial board management.</p>
-
-        <button
-          onClick={onLogin}
-          className="w-full h-16 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl dark:shadow-none"
-        >
-          <img src="https://www.google.com/favicon.ico" alt="G" className="w-4 h-4" />
-          Authenticate Profile
+        <h1 className="text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight uppercase leading-none">ANU SJB DOCKET</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-xl mb-12 font-medium">The high-security judicial ledger and secure petition management system for the Student Judicial Board.</p>
+        <button onClick={onLogin} className="group relative px-12 py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs overflow-hidden transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-slate-200 dark:shadow-none">
+          <span className="relative z-10 flex items-center gap-3">
+            <img src="https://www.google.com/favicon.ico" alt="G" className="w-4 h-4" />
+            Authenticate Identity
+          </span>
         </button>
-
-        <div className="mt-12 grid grid-cols-3 gap-4">
-          <div className="h-px bg-slate-200 dark:bg-slate-900 my-auto" />
-          <span className="text-[10px] font-bold text-slate-300 dark:text-slate-700 uppercase tracking-widest">Protocol v2.0</span>
-          <div className="h-px bg-slate-200 dark:bg-slate-900 my-auto" />
-        </div>
       </motion.div>
     </div>
   );

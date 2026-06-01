@@ -5,9 +5,9 @@
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   
-  --color-brand-primary: #1e293b; /* Deep Slate */
-  --color-brand-accent: #4f46e5;  /* Professional Indigo */
-  --color-surface-light: #f8fafc;
+  --color-brand-primary: #0f172a; /* Deep Navy */
+  --color-brand-accent: #059669;  /* Royal Emerald */
+  --color-surface-light: #f1f5f9;
   --color-surface-dark: #020617;
 }
 
@@ -19,11 +19,11 @@
   }
 
   body {
-    @apply font-sans antialiased bg-slate-50 text-slate-900 selection:bg-indigo-100 selection:text-indigo-900;
+    @apply font-sans antialiased bg-slate-50 text-slate-900 selection:bg-emerald-100 selection:text-emerald-900;
   }
 
   .dark body {
-    @apply bg-slate-950 text-slate-100 selection:bg-indigo-900 selection:text-indigo-100;
+    @apply bg-slate-950 text-slate-100 selection:bg-emerald-900 selection:text-emerald-100;
   }
 
   h1, h2, h3 {
@@ -34,11 +34,7 @@
 @layer components {
   /* Crisp Professional Cards */
   .card-professional {
-    @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-[0_1px_3px_0_rgba(0,0,0,0.1),0_1px_2px_-1px_rgba(0,0,0,0.1)];
-  }
-
-  .dark .card-professional {
-    @apply shadow-none border-slate-800/50;
+    @apply bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm;
   }
 
   /* Structural Sidebar/Navigation Item */
@@ -47,24 +43,15 @@
   }
 
   .nav-link-active {
-    @apply bg-slate-900 dark:bg-indigo-600 text-white shadow-sm;
+    @apply bg-slate-900 dark:bg-emerald-600 text-white shadow-lg;
   }
 
   .nav-link-inactive {
     @apply text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white;
   }
-
-  /* Data Table Styling */
-  .judicial-table th {
-    @apply px-6 py-4 text-[11px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800;
-  }
-
-  .judicial-table td {
-    @apply px-6 py-4 border-b border-slate-50 dark:border-slate-900/50;
-  }
 }
 
-/* Custom scrollbar for deliberations and case descriptions */
+/* Custom scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
 }
