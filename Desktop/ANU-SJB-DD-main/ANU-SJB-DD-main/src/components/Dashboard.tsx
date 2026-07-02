@@ -348,10 +348,19 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
                 </div>
 
                 {selectedCase.finalDirective && (
-                  <div className="mb-16 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-500/20 rounded-[1.5rem] p-8">
-                    <div className="flex items-center gap-2 mb-4 text-emerald-600 dark:text-emerald-400">
-                      <ShieldCheck size={20} />
-                      <h4 className="text-[10px] font-black uppercase tracking-widest">Official Judicial Directive</h4>
+                  <div className="mb-16 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-500/20 rounded-[1.5rem] p-8 relative overflow-hidden group">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+                        <ShieldCheck size={20} />
+                        <h4 className="text-[10px] font-black uppercase tracking-widest">Official Judicial Directive</h4>
+                      </div>
+                      <button
+                        onClick={() => generateCertificate(selectedCase)}
+                        className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-900/20 active:scale-95"
+                      >
+                        <Download size={14} />
+                        Download Ruling
+                      </button>
                     </div>
                     <div className="text-slate-800 dark:text-slate-200 text-sm leading-relaxed font-bold italic">"{selectedCase.finalDirective}"</div>
                   </div>
