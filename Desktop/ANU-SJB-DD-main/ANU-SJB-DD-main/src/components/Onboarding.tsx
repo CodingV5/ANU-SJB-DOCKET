@@ -22,16 +22,19 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
       color: "bg-slate-900 dark:bg-emerald-600",
       content: (
         <div className="mt-8 w-full max-w-xs mx-auto">
-          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 text-left">Student ID Number</label>
+          <label className="block text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2 text-left">Student ID Number</label>
           <input
             required
             autoFocus
             type="text"
-            placeholder="ANU-2024-XXXX"
-            className="w-full px-6 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 font-bold text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600 outline-none transition-all text-center"
+            maxLength={15}
+            disabled={loading}
+            placeholder="e.g. ANU-2024-XXXX"
+            className="w-full px-6 py-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 font-bold text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-600 outline-none transition-all text-center disabled:opacity-50"
             value={studentId}
             onChange={(e) => setStudentId(e.target.value.toUpperCase())}
           />
+          <p className="mt-2 text-[9px] text-slate-400 italic">This ID will be used for all formal judicial records.</p>
         </div>
       )
     },
@@ -69,15 +72,23 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
   const handlePrev = () => { if (step > 0) setStep(step - 1); };
 
   const completeOnboarding = async () => {
+    if (!studentId.trim()) {
+      setStep(0);
+      return;
+    }
+
     setLoading(true);
     try {
-      await updateDoc(doc(db, 'users', user.uid), {
+      const userRef = doc(db, 'users', user.uid);
+      await updateDoc(userRef, {
         hasCompletedOnboarding: true,
-        studentId: studentId.trim()
+        studentId: studentId.trim(),
+        updatedAt: new Date().toISOString()
       });
       onComplete();
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
+      console.error("Onboarding Error:", error);
+      alert("Failed to initialize profile. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }

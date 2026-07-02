@@ -71,13 +71,48 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
   };
 
   const generateCertificate = (caseData: Case) => {
-    const doc = new jsPDF();
-    doc.setFillColor("#0f172a");
-    doc.rect(0, 0, 210, 40, 'F');
-    doc.setTextColor("#ffffff");
-    doc.setFontSize(22);
-    doc.text("ANU SJB DOCKET", 105, 20, { align: "center" });
-    doc.save(`Resolution_${caseData.id.slice(0, 8)}.pdf`);
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Use the official university letterhead image you provided
+    const templateUrl = "https://r.jina.ai/i/0582046554b341f2987a070119e7a83d";
+
+    // 1. Draw the Background Template
+    doc.addImage(templateUrl, 'PNG', 0, 0, 210, 297);
+
+    // 2. Overlay Dynamic Date
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor("#000000");
+    const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+    doc.text(date, 52, 72); // Positioned next to "Date:" field in template
+
+    // 3. Overlay Final Directive (The core message)
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    const directive = caseData.finalDirective || "This case has been officially resolved following a formal judicial review.";
+    const splitDirective = doc.splitTextToSize(directive, 150);
+    doc.text(splitDirective, 30, 105); // Positioned under [TYPE YOUR OFFICIAL LETTER CONTENT]
+
+    // 4. Case Metadata (In the "Additional Paragraphs" section)
+    doc.setFont("helvetica", "bold");
+    doc.text("JUDICIAL REFERENCE DATA:", 30, 175);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Docket ID: ${caseData.id.toUpperCase()}`, 30, 182);
+    doc.text(`Subject: ${caseData.title}`, 30, 189);
+    doc.text(`Petitioner: ${caseData.petitionerName}`, 30, 196);
+    doc.text(`Counterparty: ${caseData.respondentName || 'Unspecified'}`, 30, 203);
+
+    // 5. Official Attribution (Bottom)
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.text("REGISTRAR, STUDENT JUDICIAL BODY", 105, 260, { align: "center" });
+
+    doc.save(`Official_Directive_${caseData.id.slice(0, 8)}.pdf`);
   };
 
   useEffect(() => {
@@ -101,7 +136,21 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
       : query(casesRef, orderBy('filedAt', 'desc'));
 
     const unsubscribeCases = onSnapshot(qCases, (snapshot) => {
-      setCases(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Case[]);
+      const casesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Case[];
+      setCases(casesData);
+      setLoading(false);
+
+      // Sync selected case if modal is open to reflect remote deletions or updates
+      if (selectedCase) {
+        const updated = casesData.find(c => c.id === selectedCase.id);
+        if (!updated) {
+          setSelectedCase(null); // Case was deleted on server
+        } else {
+          setSelectedCase(updated);
+        }
+      }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'cases');
       setLoading(false);
     });
 
@@ -109,7 +158,9 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
       ? query(summonsRef)
       : query(summonsRef, where('recipientEmail', '==', user.email));
 
-    const unsubscribeSummons = onSnapshot(qSummons, (snapshot) => setSummonsCount(snapshot.size));
+    const unsubscribeSummons = onSnapshot(qSummons, (snapshot) => setSummonsCount(snapshot.size), (error) => {
+      console.warn("Summons count sync issue:", error);
+    });
     return () => { unsubscribeCases(); unsubscribeSummons(); };
   }, [user]);
 
@@ -312,24 +363,75 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
               <div className="p-8 bg-slate-950 border-t border-white/5 flex flex-col sm:flex-row gap-4">
                 <AnimatePresence>
                   {showDirectiveInput ? (
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex-1 space-y-4">
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="flex-1 space-y-4 pt-4"
+                    >
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[10px] font-black text-indigo-400 uppercase tracking-widest">Final Directive Text</label>
+                        <span className="text-[9px] text-white/30 italic">Visible to all parties upon resolution</span>
+                      </div>
                       <textarea
                         autoFocus
-                        placeholder="Type the final ruling..."
-                        className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-xs text-white outline-none focus:ring-2 focus:ring-emerald-500/50 min-h-[100px] resize-none"
+                        placeholder="Provide clear instructions or the final verdict for the petitioner and respondent..."
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-white outline-none focus:ring-2 focus:ring-emerald-500/50 min-h-[120px] resize-none placeholder:text-white/20"
                         value={directiveText}
                         onChange={(e) => setDirectiveText(e.target.value)}
                       />
-                      <div className="flex gap-2">
-                        <button onClick={() => setShowDirectiveInput(false)} className="px-4 py-2 bg-white/5 text-white/50 text-[9px] font-black uppercase rounded-lg">Cancel</button>
-                        <button onClick={() => updateCaseStatus(selectedCase.id, 'resolved')} className="flex-1 py-2 bg-emerald-600 text-white text-[9px] font-black uppercase rounded-lg">Confirm Resolution</button>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => { setShowDirectiveInput(false); setDirectiveText(''); }}
+                          className="px-6 py-3 bg-white/5 text-white/50 text-[10px] font-black uppercase rounded-xl hover:bg-white/10 transition-colors"
+                        >
+                          Abort
+                        </button>
+                        <button
+                          disabled={!directiveText.trim()}
+                          onClick={() => updateCaseStatus(selectedCase.id, 'resolved')}
+                          className="flex-1 py-3 bg-emerald-600 text-white text-[10px] font-black uppercase rounded-xl shadow-lg shadow-emerald-900/40 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all"
+                        >
+                          Confirm & Issue Final Directive
+                        </button>
                       </div>
                     </motion.div>
                   ) : (
-                    <>
-                      <button onClick={() => updateCaseStatus(selectedCase.id, 'reviewing')} className="px-8 py-4 bg-white/5 text-white rounded-2xl font-bold uppercase tracking-widest text-[10px] border border-white/10 hover:bg-white/10">Mark Review</button>
-                      <button onClick={() => setShowDirectiveInput(true)} className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-emerald-900/40">Authorize Resolution</button>
-                    </>
+                    <div className="flex flex-col sm:flex-row gap-4 w-full">
+                      <div className="flex gap-2">
+                        <StatusActionBtn
+                          label="Mark Review"
+                          onClick={() => updateCaseStatus(selectedCase.id, 'reviewing')}
+                          active={selectedCase.status === 'reviewing'}
+                        />
+                        <div className="relative group">
+                          <StatusActionBtn
+                            label="Schedule Hearing"
+                            onClick={() => {}}
+                            active={selectedCase.status === 'hearing'}
+                          />
+                          <input
+                            type="datetime-local"
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                            onChange={(e) => scheduleHearing(selectedCase.id, e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-1 flex gap-3">
+                        <button
+                          onClick={() => setShowDirectiveInput(true)}
+                          className="flex-1 py-4 bg-emerald-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-emerald-900/40 hover:bg-emerald-500 active:scale-95 transition-all"
+                        >
+                          Authorize Resolution
+                        </button>
+                        <button
+                          onClick={() => updateCaseStatus(selectedCase.id, 'dismissed')}
+                          className="px-6 py-4 bg-white/5 text-white/40 rounded-2xl font-black uppercase tracking-widest text-[10px] border border-white/10 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 transition-all active:scale-95"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
                   )}
                 </AnimatePresence>
               </div>
@@ -359,27 +461,29 @@ function StatCard({ label, value, icon, color }: any) {
 
 function CaseRow({ caseItem, onClick }: any) {
   return (
-    <div onClick={onClick} className="px-8 sm:px-10 py-8 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-all group">
-      <div className="flex items-center gap-6 flex-1">
-        <div className="w-12 h-12 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-emerald-600 group-hover:text-white transition-all">
-          <FileText size={20} />
+    <div onClick={onClick} className="px-6 sm:px-10 py-6 sm:py-8 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-all group">
+      <div className="flex items-center gap-4 sm:gap-6 flex-1 min-w-0">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-emerald-600 group-hover:text-white transition-all shrink-0">
+          <FileText size={18} className="sm:w-5 sm:h-5" />
         </div>
-        <div>
-          <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-emerald-600 transition-colors">{caseItem.title}</h4>
-          <div className="flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            <span className="text-emerald-500 dark:text-emerald-400">{caseItem.petitionerName}</span>
-            <span className="w-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full" />
-            <span>ID: {caseItem.id.slice(0, 12)}</span>
+        <div className="min-w-0">
+          <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-emerald-600 transition-colors truncate">{caseItem.title}</h4>
+          <div className="flex items-center gap-3 sm:gap-4 text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <span className="text-emerald-500 dark:text-emerald-400 truncate max-w-[100px] sm:max-w-none">{caseItem.petitionerName}</span>
+            <span className="w-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full shrink-0" />
+            <span className="font-mono">REF: {caseItem.id.slice(0, 8)}</span>
           </div>
         </div>
       </div>
-      <div className="flex items-center gap-8">
-        <div className={`px-4 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border-2 ${
-          caseItem.status === 'resolved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
+      <div className="flex items-center justify-between md:justify-end gap-4 sm:gap-8 border-t md:border-none pt-3 md:pt-0 border-slate-50 dark:border-slate-800/50">
+        <div className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-widest border-2 ${
+          caseItem.status === 'resolved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800' :
+          caseItem.status === 'dismissed' ? 'bg-slate-50 text-slate-400 border-slate-200 dark:bg-slate-800 dark:border-slate-700' :
+          'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
         }`}>
           {caseItem.status}
         </div>
-        <ArrowUpRight size={20} className="text-slate-200 dark:text-slate-700 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
+        <ArrowUpRight size={18} className="text-slate-200 dark:text-slate-700 group-hover:text-slate-900 dark:group-hover:text-white transition-colors" />
       </div>
     </div>
   );

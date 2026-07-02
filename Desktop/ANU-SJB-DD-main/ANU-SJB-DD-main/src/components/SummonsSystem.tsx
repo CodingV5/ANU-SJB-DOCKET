@@ -117,11 +117,15 @@ function IssueSummonForm({ onSuccess }: { onSuccess: () => void }) {
       await addDoc(collection(db, 'summons'), summonData);
 
       const serverUrl = Capacitor.isNativePlatform() ? 'https://anu-sjb-docket.onrender.com' : window.location.origin;
-      await fetch(`${serverUrl}/api/notify-summon`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ recipientName: formData.recipientName, recipientEmail: formData.recipientEmail, caseTitle: formData.caseTitle, caseId: formData.caseId })
-      });
+      try {
+        await fetch(`${serverUrl}/api/notify-summon`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ recipientName: formData.recipientName, recipientEmail: formData.recipientEmail, caseTitle: formData.caseTitle, caseId: formData.caseId })
+        });
+      } catch (e) {
+        console.warn('Silent notification failure:', e);
+      }
       onSuccess();
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'summons');
