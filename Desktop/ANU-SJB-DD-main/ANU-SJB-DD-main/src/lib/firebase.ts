@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, signInWithCredential } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getFirestore, doc, getDocFromServer, terminate, clearIndexedDbPersistence } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { Capacitor } from '@capacitor/core';
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
@@ -14,6 +14,17 @@ export const db = (firebaseConfig as any).firestoreDatabaseId
 export const storage = getStorage(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
+
+// Force clear cache once on startup to fix "Ghost Records"
+const clearOldData = async () => {
+  try {
+    await clearIndexedDbPersistence(db);
+    console.log("Judicial cache cleared successfully.");
+  } catch (e) {
+    console.warn("Cache clearing issue (normal on some browsers):", e);
+  }
+};
+clearOldData();
 
 export enum OperationType {
   CREATE = 'create',
