@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { auth, signInWithGoogle, logout, db } from './lib/firebase';
+import { auth, signInWithGoogle, logout, db, storage } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { Gavel, Briefcase, Archive, Bell, LogOut, Loader2, ShieldCheck, User as UserIcon, Moon, Sun, LayoutDashboard, FileSpreadsheet, Users, Menu, X as CloseIcon } from 'lucide-react';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Gavel, Briefcase, Archive, Bell, LogOut, Loader2, ShieldCheck, User as UserIcon, Moon, Sun, LayoutDashboard, FileSpreadsheet, Users, Menu, X as CloseIcon, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Dashboard from './components/Dashboard';
 import CaseFiling from './components/CaseFiling';
@@ -39,6 +40,28 @@ export default function App() {
   const [pendingToken, setPendingToken] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploadingAvatar(true);
+    try {
+      const storageRef = ref(storage, `avatars/${user.uid}`);
+      await uploadBytes(storageRef, file);
+      const photoURL = await getDownloadURL(storageRef);
+
+      const userDocRef = doc(db, 'users', user.uid);
+      await setDoc(userDocRef, { photoURL }, { merge: true });
+      setUser({ ...user, photoURL });
+    } catch (error) {
+      console.error("Avatar upload error:", error);
+      alert("Failed to update avatar.");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   useEffect(() => {
     const root = document.documentElement;
@@ -195,10 +218,22 @@ export default function App() {
         </nav>
 
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
-          <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-            <div className="w-8 h-8 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center">
-              <UserIcon size={14} className="text-slate-400" />
-            </div>
+          <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 dark:bg-slate-800/50 rounded-2xl group relative">
+            <label className="relative cursor-pointer shrink-0">
+              <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} disabled={uploadingAvatar} />
+              <div className="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden">
+                {uploadingAvatar ? (
+                  <Loader2 size={16} className="animate-spin text-emerald-600" />
+                ) : user.photoURL ? (
+                  <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <UserIcon size={18} className="text-slate-400" />
+                )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-full">
+                  <Camera size={14} className="text-white" />
+                </div>
+              </div>
+            </label>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold truncate">{user.displayName}</p>
               <p className="text-[10px] text-slate-400 capitalize">{user.role.replace('_', ' ')}</p>
@@ -217,9 +252,23 @@ export default function App() {
 
       {/* Mobile Top Bar - Hidden on Desktop */}
       <header className="md:hidden sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-900 px-6 h-16 flex items-center justify-between transition-colors">
-        <div className="flex items-center gap-2">
-          <Gavel className="text-emerald-600 w-5 h-5" />
-          <span className="text-xs font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white">ANU SJB</span>
+        <div className="flex items-center gap-3">
+          <label className="relative cursor-pointer">
+            <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} disabled={uploadingAvatar} />
+            <div className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center overflow-hidden">
+              {uploadingAvatar ? (
+                <Loader2 size={14} className="animate-spin text-emerald-600" />
+              ) : user.photoURL ? (
+                <img src={user.photoURL} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <UserIcon size={16} className="text-slate-400" />
+              )}
+            </div>
+          </label>
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white leading-none">ANU SJB</span>
+            <span className="text-[8px] font-bold text-emerald-600 uppercase mt-0.5 tracking-tighter">{user.displayName.split(' ')[0]}</span>
+          </div>
         </div>
         <div className="flex items-center gap-1">
           <button onClick={toggleDarkMode} className="p-2 text-slate-400 hover:text-emerald-600 transition-colors">
