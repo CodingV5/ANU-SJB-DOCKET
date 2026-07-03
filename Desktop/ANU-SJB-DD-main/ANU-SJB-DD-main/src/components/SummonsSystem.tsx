@@ -67,7 +67,7 @@ export default function SummonsSystem({ user, onViewCase }: { user: any; onViewC
 
       {showIssueForm && <IssueSummonForm onSuccess={() => setShowIssueForm(false)} />}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {loading ? (
           Array(3).fill(0).map((_, i) => <div key={i} className="h-64 bg-white dark:bg-slate-900 rounded-3xl animate-pulse" />)
         ) : summons.length > 0 ? (
@@ -81,7 +81,7 @@ export default function SummonsSystem({ user, onViewCase }: { user: any; onViewC
             />
           ))
         ) : (
-          <div className="md:col-span-full py-24 bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem] text-center">
+          <div className="col-span-full py-16 sm:py-24 bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-[2.5rem] text-center">
             <ShieldAlert size={48} className="mx-auto text-slate-300 dark:text-slate-700 mb-4" />
             <h3 className="font-bold text-slate-900 dark:text-white uppercase tracking-widest text-xs">No Active Summons</h3>
           </div>

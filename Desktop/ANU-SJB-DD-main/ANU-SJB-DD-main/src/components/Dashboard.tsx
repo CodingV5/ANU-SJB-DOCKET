@@ -246,8 +246,8 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
         </div>
       </div>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      {/* Metrics Grid - Improved responsiveness */}
+      <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatCard label="DOCKET SIZE" value={stats.total} icon={<FileText />} color="text-slate-900 dark:text-white" />
         <StatCard label="PENDING REVIEW" value={stats.pending} icon={<Clock />} color="text-emerald-600 dark:text-emerald-400" />
         <StatCard label="SUMMONS" value={stats.summons} icon={<Bell />} color="text-blue-600 dark:text-blue-400" />
@@ -470,22 +470,22 @@ function StatCard({ label, value, icon, color }: any) {
 
 function CaseRow({ caseItem, onClick }: any) {
   return (
-    <div onClick={onClick} className="px-6 sm:px-10 py-6 sm:py-8 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-all group">
+    <div onClick={onClick} className="px-5 sm:px-10 py-6 sm:py-8 flex flex-col md:flex-row md:items-center justify-between gap-4 sm:gap-6 hover:bg-slate-50 dark:hover:bg-slate-800/40 cursor-pointer transition-all group">
       <div className="flex items-center gap-4 sm:gap-6 flex-1 min-w-0">
         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-emerald-600 group-hover:text-white transition-all shrink-0">
           <FileText size={18} className="sm:w-5 sm:h-5" />
         </div>
-        <div className="min-w-0">
-          <h4 className="text-base sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-emerald-600 transition-colors truncate">{caseItem.title}</h4>
-          <div className="flex items-center gap-3 sm:gap-4 text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            <span className="text-emerald-500 dark:text-emerald-400 truncate max-w-[100px] sm:max-w-none">{caseItem.petitionerName}</span>
+        <div className="min-w-0 flex-1">
+          <h4 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-emerald-600 transition-colors truncate">{caseItem.title}</h4>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 sm:mt-1">
+            <span className="text-emerald-500 dark:text-emerald-400 truncate max-w-[80px] sm:max-w-none">{caseItem.petitionerName}</span>
             <span className="w-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full shrink-0" />
             <span className="font-mono">REF: {caseItem.id.slice(0, 8)}</span>
           </div>
         </div>
       </div>
       <div className="flex items-center justify-between md:justify-end gap-4 sm:gap-8 border-t md:border-none pt-3 md:pt-0 border-slate-50 dark:border-slate-800/50">
-        <div className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-widest border-2 ${
+        <div className={`px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg sm:rounded-xl text-[8px] sm:text-[9px] font-black uppercase tracking-widest border-2 ${
           caseItem.status === 'resolved' ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800' :
           caseItem.status === 'dismissed' ? 'bg-slate-50 text-slate-400 border-slate-200 dark:bg-slate-800 dark:border-slate-700' :
           'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'

@@ -69,46 +69,46 @@ export default function UserManagement({ currentUser }: { currentUser: any }) {
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[600px]">
             <thead>
               <tr className="bg-slate-50/50 dark:bg-slate-800/50">
-                <th className="px-10 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Authenticated Profile</th>
-                <th className="px-10 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 text-right">Access Authorization Matrix</th>
+                <th className="px-6 sm:px-10 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Authenticated Profile</th>
+                <th className="px-6 sm:px-10 py-6 font-black text-[10px] uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500 text-right">Access Authorization Matrix</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filteredUsers.map((user) => (
                 <tr key={user.uid} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/30 transition-colors group">
-                  <td className="px-10 py-8">
-                    <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-700 group-hover:border-emerald-100 dark:group-hover:border-emerald-900 transition-all shadow-sm">
-                        <UserIcon size={28} />
+                  <td className="px-6 sm:px-10 py-6 sm:py-8">
+                    <div className="flex items-center gap-4 sm:gap-5">
+                      <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-800 flex items-center justify-center text-slate-300 dark:text-slate-700 group-hover:border-emerald-100 dark:group-hover:border-emerald-900 transition-all shadow-sm shrink-0">
+                        <UserIcon size={20} className="sm:w-7 sm:h-7" />
                       </div>
-                      <div>
-                        <p className="font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors uppercase tracking-tight text-lg">{user.displayName || 'UNIDENTIFIED'}</p>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black tracking-widest bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-lg border border-emerald-100 dark:border-emerald-800">{user.studentId || 'NO ID'}</span>
-                          <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1.5"><Mail size={12} className="opacity-50" /> {user.email}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-black text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors uppercase tracking-tight text-sm sm:text-lg truncate">{user.displayName || 'UNIDENTIFIED'}</p>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
+                          <span className="text-[8px] sm:text-[10px] text-emerald-600 dark:text-emerald-400 font-black tracking-widest bg-emerald-50 dark:bg-emerald-900/20 px-1.5 py-0.5 rounded-lg border border-emerald-100 dark:border-emerald-800 shrink-0">{user.studentId || 'NO ID'}</span>
+                          <span className="text-[8px] sm:text-[10px] text-slate-400 font-mono flex items-center gap-1.5 truncate max-w-[150px] sm:max-w-none"><Mail size={10} className="opacity-50 shrink-0" /> {user.email}</span>
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-10 py-8">
-                    <div className="flex flex-wrap gap-2 justify-end">
+                  <td className="px-6 sm:px-10 py-6 sm:py-8">
+                    <div className="flex flex-wrap gap-2 justify-end min-w-[200px]">
                       {roles.map((role) => (
                         <button
                           key={role}
                           onClick={() => handleRoleChange(user.uid, role)}
                           disabled={updating === user.uid || user.role === role}
-                          className={`px-5 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border-2 ${
+                          className={`px-3 sm:px-5 py-2 sm:py-3 rounded-lg sm:rounded-xl text-[8px] sm:text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-1.5 sm:gap-2 border-2 ${
                             user.role === role 
-                              ? 'bg-slate-900 dark:bg-emerald-600 text-white border-slate-900 dark:border-emerald-600 shadow-xl'
+                              ? 'bg-slate-900 dark:bg-emerald-600 text-white border-slate-900 dark:border-emerald-600 shadow-md cursor-default'
                               : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400'
                           } disabled:opacity-50 active:scale-95`}
                         >
-                          {user.role === role && <Check size={12} />}
-                          {updating === user.uid && user.role !== role ? <Loader2 className="animate-spin" size={12} /> : null}
+                          {user.role === role && <Check size={10} className="sm:w-3 sm:h-3" />}
+                          {updating === user.uid && user.role !== role ? <Loader2 className="animate-spin" size={10} /> : null}
                           {role.replace('_', ' ')}
                         </button>
                       ))}
