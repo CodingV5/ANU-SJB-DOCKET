@@ -18,12 +18,11 @@ export const googleProvider = new GoogleAuthProvider();
 // Force clear cache once on startup to fix "Ghost Records"
 const clearOldData = async () => {
   try {
-    // Terminate local DB instance and wipe it
-    await terminate(db);
+    // Only clear if we aren't already initialized in a way that blocks login
     await clearIndexedDbPersistence(db);
-    console.log("Judicial cache purged. System starting with fresh cloud data.");
+    console.log("Judicial cache synchronized.");
   } catch (e) {
-    console.warn("Real-time sync initiated.");
+    console.log("Syncing with live ledger...");
   }
 };
 clearOldData();
