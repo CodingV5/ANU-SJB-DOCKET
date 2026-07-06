@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ShieldCheck, Briefcase, Archive, Bell, CheckCircle2, ChevronRight, ChevronLeft, Scale, Loader2 } from 'lucide-react';
+import { ShieldCheck, Briefcase, Bell, CheckCircle2, ChevronRight, ChevronLeft, Scale, Loader2, ShieldAlert } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
+import LegalDocuments from './LegalDocuments';
 
 interface OnboardingProps {
   user: any;
@@ -13,6 +14,8 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [studentId, setStudentId] = useState('');
+  const [agreed, setAgreed] = useState(false);
+  const [showLegal, setShowLegal] = useState<'terms' | 'privacy' | null>(null);
 
   const steps = [
     {
@@ -34,7 +37,52 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
             value={studentId}
             onChange={(e) => setStudentId(e.target.value.toUpperCase())}
           />
-          <p className="mt-3 text-[10px] text-slate-400 italic leading-snug">Note: This identification number will be permanently bound to your judicial profile and used for all formal filings.</p>
+        </div>
+      )
+    },
+    {
+      title: "Legal Acknowledgement",
+      description: "As an authenticated participant of the ANU Student Judicial Board, you must agree to the board's operational protocols and privacy standards.",
+      icon: <ShieldAlert className="text-white w-12 h-12" />,
+      color: "bg-slate-900 dark:bg-emerald-600",
+      content: (
+        <div className="mt-8 space-y-4 w-full max-w-sm mx-auto">
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => setShowLegal('terms')}
+              className="flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl group hover:border-emerald-500/50 transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <Scale size={18} className="text-slate-400 group-hover:text-emerald-500" />
+                <span className="text-[11px] font-black uppercase text-slate-700 dark:text-slate-200">Terms of Conduct</span>
+              </div>
+              <ChevronRight size={16} className="text-slate-300" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowLegal('privacy')}
+              className="flex items-center justify-between px-6 py-4 bg-slate-50 dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 rounded-2xl group hover:border-emerald-500/50 transition-all"
+            >
+              <div className="flex items-center gap-3">
+                <ShieldAlert size={18} className="text-slate-400 group-hover:text-emerald-500" />
+                <span className="text-[11px] font-black uppercase text-slate-700 dark:text-slate-200">Privacy Standards</span>
+              </div>
+              <ChevronRight size={16} className="text-slate-300" />
+            </button>
+          </div>
+
+          <label className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="w-5 h-5 rounded-lg border-2 border-emerald-500 accent-emerald-600 cursor-pointer"
+            />
+            <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 leading-tight">
+              I have read and agree to all judicial protocols and data privacy standards.
+            </span>
+          </label>
         </div>
       )
     },
@@ -65,6 +113,10 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
       alert("Please enter your Student ID to proceed with the protocol.");
       return;
     }
+    if (step === 1 && !agreed) {
+      alert("You must acknowledge the legal protocols to proceed.");
+      return;
+    }
     if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
@@ -77,7 +129,7 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
   };
 
   const completeOnboarding = async () => {
-    if (!studentId.trim()) {
+    if (!studentId.trim() || !agreed) {
       setStep(0);
       return;
     }
@@ -88,12 +140,14 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
       await updateDoc(userRef, {
         hasCompletedOnboarding: true,
         studentId: studentId.trim(),
+        agreedToLegal: true,
+        legalAgreedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
       onComplete();
     } catch (error) {
       console.error("Onboarding Error:", error);
-      alert("Protocol initialization failed. Please ensure a stable network connection and try again.");
+      alert("Protocol initialization failed.");
     } finally {
       setLoading(false);
     }
@@ -107,6 +161,12 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
         exit={{ opacity: 0 }}
         className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
       />
+
+      <AnimatePresence>
+        {showLegal && (
+          <LegalDocuments type={showLegal} onClose={() => setShowLegal(null)} />
+        )}
+      </AnimatePresence>
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 30 }}
@@ -131,7 +191,7 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-4 leading-tight">
                 {steps[step].title}
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 font-medium leading-relaxed text-sm sm:text-base">
+              <p className="text-slate-50 dark:text-slate-400 font-medium leading-relaxed text-sm sm:text-base mb-4">
                 {steps[step].description}
               </p>
               {(steps[step] as any).content}
