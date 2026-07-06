@@ -293,7 +293,7 @@ export default function App() {
             >
               {activeTab === 'dashboard' && <Dashboard user={user} initialCaseId={pendingCaseId} onModalClose={() => setPendingCaseId(null)} />}
               {activeTab === 'filing' && <CaseFiling user={user} onSuccess={() => setActiveTab('dashboard')} />}
-              {activeTab === 'archive' && <PrecedentArchive />}
+              {activeTab === 'archive' && <PrecedentArchive user={user} />}
               {activeTab === 'summons' && <SummonsSystem user={user} onViewCase={(id) => { setPendingCaseId(id); setActiveTab('dashboard'); }} />}
               {activeTab === 'users' && <UserManagement currentUser={user} />}
             </motion.div>
