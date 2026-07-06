@@ -9,6 +9,7 @@ import { Capacitor } from '@capacitor/core';
 
 interface Case {
   id: string;
+  docketId: string;
   title: string;
   description: string;
   status: 'pending' | 'reviewing' | 'hearing' | 'resolved' | 'dismissed';
@@ -304,7 +305,9 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
                       }`}>
                         {selectedCase.status}
                       </span>
-                      <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-widest">ID: {selectedCase.id}</span>
+                      <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-widest">
+                        {selectedCase.docketId || `REF: ${selectedCase.id.slice(0, 8)}`}
+                      </span>
                     </div>
                     <h3 className="text-4xl sm:text-5xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none">{selectedCase.title}</h3>
                   </div>
@@ -520,12 +523,12 @@ function CaseRow({ caseItem, onClick }: any) {
         <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-100 dark:bg-slate-800 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-emerald-600 group-hover:text-white transition-all shrink-0">
           <FileText size={18} className="sm:w-5 sm:h-5" />
         </div>
-        <div className="min-w-0 flex-1">
-          <h4 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-emerald-600 transition-colors truncate">{caseItem.title}</h4>
+        <div>
+          <h4 className="text-lg font-black text-slate-900 dark:text-white uppercase tracking-tight group-hover:text-emerald-600 transition-colors truncate">{caseItem.title}</h4>
           <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[8px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5 sm:mt-1">
             <span className="text-emerald-500 dark:text-emerald-400 truncate max-w-[80px] sm:max-w-none">{caseItem.petitionerName}</span>
             <span className="w-1 h-1 bg-slate-200 dark:bg-slate-700 rounded-full shrink-0" />
-            <span className="font-mono">REF: {caseItem.id.slice(0, 8)}</span>
+            <span className="font-mono text-emerald-600 dark:text-emerald-400">{caseItem.docketId || caseItem.id.slice(0, 8)}</span>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { db, storage, handleFirestoreError, OperationType } from '../lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, runTransaction } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ShieldCheck, Send, Loader2, Info, Image as ImageIcon, X, Paperclip } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -56,19 +56,47 @@ export default function CaseFiling({ user, onSuccess }: { user: any; onSuccess: 
 
     setLoading(true);
     try {
-      const caseData = {
-        ...formData,
-        petitionerId: user.uid,
-        petitionerName: user.displayName,
-        petitionerEmail: user.email,
-        status: 'pending',
-        filedAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      };
+      // Secure Atomic Transaction for Sequential ID
+      const counterRef = doc(db, 'metadata', 'caseCounter');
 
-      const docRef = await addDoc(collection(db, 'cases'), caseData);
-      setSubmittedCase({ id: docRef.id, title: formData.title });
+      const result = await runTransaction(db, async (transaction) => {
+        const counterDoc = await transaction.get(counterRef);
+        let nextCount = 1;
+
+        if (counterDoc.exists()) {
+          nextCount = (counterDoc.data().count || 0) + 1;
+        }
+
+        const year = new Date().getFullYear();
+        const docketId = `SJB/${year}/${String(nextCount).padStart(3, '0')}`;
+
+        const caseRef = doc(collection(db, 'cases'));
+        const caseData = {
+          ...formData,
+          docketId,
+          petitionerId: user.uid,
+          petitionerName: user.displayName,
+          petitionerEmail: user.email,
+          status: 'pending',
+          filedAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          activityLog: [{
+            status: 'pending',
+            actorName: user.displayName,
+            timestamp: new Date().toISOString(),
+            note: 'Formal petition initiated and encrypted in the judicial ledger.'
+          }]
+        };
+
+        transaction.set(counterRef, { count: nextCount });
+        transaction.set(caseRef, caseData);
+
+        return { docketId };
+      });
+
+      setSubmittedCase({ id: result.docketId, title: formData.title });
     } catch (error) {
+      console.error("Filing Error:", error);
       handleFirestoreError(error, OperationType.CREATE, 'cases');
     } finally {
       setLoading(false);
@@ -90,8 +118,8 @@ export default function CaseFiling({ user, onSuccess }: { user: any; onSuccess: 
         
         <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-8 mb-10 text-left border border-slate-100 dark:border-slate-800 shadow-inner">
           <div className="mb-6">
-            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] block mb-2">Tracking Sequence</span>
-            <code className="text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold bg-emerald-50/50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 px-3 py-2 rounded-xl block break-all leading-relaxed">{submittedCase.id}</code>
+            <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] block mb-2">Docket Sequence ID</span>
+            <code className="text-emerald-600 dark:text-emerald-400 font-mono text-lg font-bold bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 px-3 py-2 rounded-xl block break-all leading-relaxed">{submittedCase.id}</code>
           </div>
           <div>
             <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] block mb-2">Docket Subject</span>
