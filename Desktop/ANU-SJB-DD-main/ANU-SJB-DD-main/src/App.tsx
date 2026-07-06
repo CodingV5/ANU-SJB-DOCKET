@@ -32,6 +32,16 @@ interface AppUser {
   studentId?: string;
 }
 
+const LOGO_URL = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyuibvKEHr21xiuAzv9INF4eRFXpSiscqLOniZo5Fdsg&s=10";
+
+function LogoIcon({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <div className={`${className} rounded-lg overflow-hidden bg-white flex items-center justify-center p-0.5 shadow-sm border border-slate-100 dark:border-slate-800`}>
+      <img src={LOGO_URL} alt="Logo" className="w-full h-full object-contain" />
+    </div>
+  );
+}
+
 export default function App() {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
@@ -191,9 +201,7 @@ export default function App() {
       {/* Desktop Sidebar - Hidden on Mobile */}
       <aside className="hidden md:flex flex-col w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 sticky top-0 h-screen shrink-0 transition-colors">
         <div className="p-8 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-          <div className="bg-slate-900 dark:bg-emerald-600 p-1.5 rounded-lg shadow-lg">
-            <Gavel className="text-white w-4 h-4" />
-          </div>
+          <LogoIcon className="w-10 h-10" />
           <div>
             <h1 className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white leading-none">ANU SJB</h1>
             <p className="text-[9px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mt-1">Judicial Portal</p>
@@ -338,7 +346,7 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
       </div>
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl w-full text-center relative z-10">
         <div className="inline-flex items-center gap-3 px-4 py-2 bg-slate-900 dark:bg-emerald-600 text-white rounded-2xl mb-8 shadow-2xl">
-          <Gavel size={24} />
+          <LogoIcon className="w-8 h-8" />
           <span className="font-bold tracking-widest text-sm uppercase">Judicial Portal</span>
         </div>
         <h1 className="text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight uppercase leading-none">ANU SJB DOCKET</h1>

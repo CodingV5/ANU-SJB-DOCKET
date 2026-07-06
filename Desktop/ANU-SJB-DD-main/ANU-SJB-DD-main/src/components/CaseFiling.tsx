@@ -142,6 +142,9 @@ export default function CaseFiling({ user, onSuccess }: { user: any; onSuccess: 
       <div className="bg-slate-900 dark:bg-slate-950 rounded-[2.5rem] p-10 mb-8 text-white relative overflow-hidden shadow-2xl border border-white/5 transition-colors">
         <div className="relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-emerald-400 text-[10px] font-black uppercase tracking-[0.3em] mb-4">
+            <div className="w-3 h-3 rounded-full overflow-hidden bg-white">
+              <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTyuibvKEHr21xiuAzv9INF4eRFXpSiscqLOniZo5Fdsg&s=10" alt="L" className="w-full h-full object-contain" />
+            </div>
             New Submission Protocol
           </div>
           <h2 className="text-4xl font-black mb-2 flex items-center gap-4 uppercase tracking-tighter">
