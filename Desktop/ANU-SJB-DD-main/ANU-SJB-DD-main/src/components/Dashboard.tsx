@@ -23,6 +23,12 @@ interface Case {
   deliberations?: any[];
   hearingDate?: string;
   finalDirective?: string;
+  activityLog?: {
+    status: string;
+    actorName: string;
+    timestamp: string;
+    note?: string;
+  }[];
 }
 
 export default function Dashboard({ user, initialCaseId, onModalClose }: { user: any; initialCaseId?: string | null; onModalClose?: () => void }) {
@@ -193,7 +199,18 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
 
     try {
       const caseRef = doc(db, 'cases', caseId);
-      const updateData: any = { status: newStatus, updatedAt: serverTimestamp() };
+      const newLogEntry = {
+        status: newStatus,
+        actorName: user.displayName,
+        timestamp: new Date().toISOString(),
+        note: newStatus === 'resolved' ? 'Final directive issued and certified.' : `Case moved to ${newStatus} status.`
+      };
+
+      const updateData: any = {
+        status: newStatus,
+        updatedAt: serverTimestamp(),
+        activityLog: [...(selectedCase?.activityLog || []), newLogEntry]
+      };
       if (newStatus === 'resolved' && directiveText.trim()) updateData.finalDirective = directiveText.trim();
       await updateDoc(caseRef, updateData);
 
@@ -312,16 +329,44 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
-                  <div className="space-y-4">
-                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Parties Involved</h4>
-                    <div className="space-y-3">
-                      <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                        <p className="text-[9px] font-bold text-emerald-500 uppercase mb-1">Petitioner Entity</p>
-                        <p className="font-black text-slate-900 dark:text-white">{selectedCase.petitionerName}</p>
+                  <div className="space-y-8">
+                    <div>
+                      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Procedural Timeline</h4>
+                      <div className="space-y-4">
+                        {['pending', 'reviewing', 'hearing', 'resolved'].map((step, idx) => {
+                          const isComplete = selectedCase.activityLog?.some(l => l.status === step) ||
+                                           (selectedCase.status === 'resolved' && step !== 'dismissed');
+                          const isActive = selectedCase.status === step;
+
+                          return (
+                            <div key={step} className="flex items-center gap-4">
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${
+                                isComplete ? 'bg-emerald-600 border-emerald-600 text-white' :
+                                isActive ? 'border-emerald-600 text-emerald-600 animate-pulse' :
+                                'border-slate-200 dark:border-slate-800 text-slate-200'
+                              }`}>
+                                {isComplete ? <CheckCircle2 size={12} /> : <span className="text-[10px] font-bold">{idx + 1}</span>}
+                              </div>
+                              <span className={`text-[10px] font-black uppercase tracking-widest ${
+                                isComplete || isActive ? 'text-slate-900 dark:text-white' : 'text-slate-300 dark:text-slate-700'
+                              }`}>{step}</span>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Respondent Party</p>
-                        <p className="font-black text-slate-900 dark:text-white">{selectedCase.respondentName || 'Unspecified'}</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Parties Involved</h4>
+                      <div className="space-y-3">
+                        <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                          <p className="text-[9px] font-bold text-emerald-500 uppercase mb-1">Petitioner Entity</p>
+                          <p className="font-black text-slate-900 dark:text-white">{selectedCase.petitionerName}</p>
+                        </div>
+                        <div className="p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                          <p className="text-[9px] font-bold text-slate-400 uppercase mb-1">Respondent Party</p>
+                          <p className="font-black text-slate-900 dark:text-white">{selectedCase.respondentName || 'Unspecified'}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
