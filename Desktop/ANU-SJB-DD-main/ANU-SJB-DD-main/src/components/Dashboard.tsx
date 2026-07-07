@@ -293,7 +293,7 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
       {/* Modal - Professional Drawer Style */}
       {selectedCase && (
         <div className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-8">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={handleCloseModal} className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm" />
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={handleCloseModal} className="fixed inset-0 bg-slate-950/90" />
           <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 30, stiffness: 300 }} className="relative bg-white dark:bg-slate-900 w-full max-w-4xl sm:rounded-[2.5rem] rounded-t-[2.5rem] shadow-2xl flex flex-col max-h-[94vh] overflow-hidden border border-slate-200 dark:border-slate-800 transition-colors">
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               <div className="p-8 sm:p-16">

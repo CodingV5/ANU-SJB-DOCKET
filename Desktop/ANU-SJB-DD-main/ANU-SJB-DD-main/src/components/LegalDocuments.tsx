@@ -15,7 +15,7 @@ export default function LegalDocuments({ type, onClose }: LegalModalProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+        className="absolute inset-0 bg-slate-950/95"
       />
 
       <motion.div

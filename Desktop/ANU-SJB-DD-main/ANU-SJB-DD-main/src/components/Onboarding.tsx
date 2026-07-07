@@ -159,7 +159,7 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+        className="absolute inset-0 bg-slate-950/90"
       />
 
       <AnimatePresence>

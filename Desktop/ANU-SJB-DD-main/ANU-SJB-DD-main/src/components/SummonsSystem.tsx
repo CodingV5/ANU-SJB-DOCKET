@@ -188,7 +188,7 @@ function IssueSummonForm({ onSuccess }: { onSuccess: () => void }) {
       <AnimatePresence>
         {showConfirm && (
           <div className="fixed inset-0 z-[120] flex items-center justify-center p-6">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowConfirm(false)} className="fixed inset-0 bg-slate-950/90 backdrop-blur-sm" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowConfirm(false)} className="fixed inset-0 bg-slate-950/90" />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative bg-white dark:bg-slate-900 w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl border border-slate-200 dark:border-slate-800">
               <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase mb-4">Confirm Issuance</h3>
               <p className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-8">You are initiating a certified summons protocol for <span className="text-slate-900 dark:text-white font-bold">{formData.recipientName}</span>.</p>

@@ -3,7 +3,7 @@ import { auth, signInWithGoogle, logout, db, storage } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Gavel, Briefcase, Archive, Bell, LogOut, Loader2, ShieldCheck, User as UserIcon, Moon, Sun, LayoutDashboard, FileSpreadsheet, Users, Menu, X as CloseIcon, Camera } from 'lucide-react';
+import { Gavel, Briefcase, Archive, Bell, LogOut, Loader2, ShieldCheck, User as UserIcon, Moon, Sun, LayoutDashboard, FileSpreadsheet, Users, Menu, X as CloseIcon, Camera, Scale } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Dashboard from './components/Dashboard';
 import CaseFiling from './components/CaseFiling';
@@ -270,7 +270,7 @@ export default function App() {
       </aside>
 
       {/* Mobile Top Bar - Hidden on Desktop */}
-      <header className="md:hidden sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-100 dark:border-slate-900 px-6 h-16 flex items-center justify-between transition-colors">
+      <header className="md:hidden sticky top-0 z-40 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-900 px-6 h-16 flex items-center justify-between transition-colors">
         <div className="flex items-center gap-3">
           <label className="relative cursor-pointer">
             <input type="file" className="hidden" accept="image/*" onChange={handleAvatarChange} disabled={uploadingAvatar} />
@@ -286,7 +286,7 @@ export default function App() {
           </label>
           <div className="flex flex-col">
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-900 dark:text-white leading-none">ANU SJB</span>
-            <span className="text-[8px] font-bold text-emerald-600 uppercase mt-0.5 tracking-tighter">{user.displayName.split(' ')[0]}</span>
+            <span className="text-[8px] font-bold text-emerald-600 uppercase mt-0.5 tracking-tighter">{(user.displayName || 'Anonymous').split(' ')[0]}</span>
           </div>
         </div>
         <div className="flex items-center gap-1">
@@ -321,7 +321,7 @@ export default function App() {
       </main>
 
       {/* Mobile Bottom Navigation - Hidden on Desktop */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md border-t border-slate-100 dark:border-slate-900 px-2 py-3 flex justify-around items-center z-50 transition-colors">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900 px-2 py-3 flex justify-around items-center z-50 transition-colors">
         {navItems.map((item) => (
           <button
             key={item.id}
@@ -351,19 +351,24 @@ export default function App() {
 
 function LandingPage({ onLogin }: { onLogin: () => void }) {
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden transition-colors duration-300">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden transition-colors duration-300">
       <div className="absolute inset-0 pointer-events-none opacity-50 dark:opacity-20">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_20%,#10b98120_0%,transparent_40%)]" />
       </div>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl w-full text-center relative z-10">
-        <div className="inline-flex items-center gap-3 px-4 py-2 bg-slate-900 dark:bg-emerald-600 text-white rounded-2xl mb-8 shadow-2xl">
-          <LogoIcon className="w-8 h-8" />
-          <span className="font-bold tracking-widest text-sm uppercase">Judicial Portal</span>
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl w-full text-center relative z-10 flex flex-col items-center">
+        <div className="w-32 h-32 rounded-[2.5rem] overflow-hidden bg-white p-2 shadow-2xl mb-10 border border-slate-100 dark:border-slate-800">
+          <img src={LOGO_URL} alt="ANU Logo" className="w-full h-full object-contain" />
         </div>
-        <h1 className="text-6xl font-black text-slate-900 dark:text-white mb-6 tracking-tight uppercase leading-none">ANU SJB DOCKET</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-xl mb-12 font-medium">The high-security judicial ledger and secure petition management system for the Student Judicial Board.</p>
-        <button onClick={onLogin} className="group relative px-12 py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs overflow-hidden transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-slate-200 dark:shadow-none">
-          <span className="relative z-10 flex items-center gap-3">
+
+        <div className="inline-flex items-center gap-3 px-4 py-2 bg-slate-900 dark:bg-emerald-600 text-white rounded-2xl mb-8 shadow-xl">
+          <span className="font-bold tracking-widest text-xs uppercase">Judicial Portal</span>
+        </div>
+
+        <h1 className="text-5xl font-black text-slate-900 dark:text-white mb-6 tracking-tight uppercase leading-none">ANU SJB DOCKET</h1>
+        <p className="text-slate-500 dark:text-slate-400 text-lg mb-12 font-medium max-w-sm">The high-security judicial ledger and secure petition management system for the Student Judicial Board.</p>
+
+        <button onClick={onLogin} className="group relative w-full max-w-xs py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs overflow-hidden transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-slate-200 dark:shadow-none">
+          <span className="relative z-10 flex items-center justify-center gap-3">
             <img src="https://www.google.com/favicon.ico" alt="G" className="w-4 h-4" />
             Authenticate Identity
           </span>
