@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, Briefcase, Bell, CheckCircle2, ChevronRight, ChevronLeft, Scale, Loader2, ShieldAlert } from 'lucide-react';
-import { db } from '../lib/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { db, handleFirestoreError, OperationType } from '../lib/firebase';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import LegalDocuments from './LegalDocuments';
 
 interface OnboardingProps {
@@ -141,13 +141,13 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
         hasCompletedOnboarding: true,
         studentId: studentId.trim(),
         agreedToLegal: true,
-        legalAgreedAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        legalAgreedAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       });
       onComplete(studentId.trim());
     } catch (error) {
       console.error("Onboarding Error:", error);
-      alert("Protocol initialization failed.");
+      handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
     } finally {
       setLoading(false);
     }
