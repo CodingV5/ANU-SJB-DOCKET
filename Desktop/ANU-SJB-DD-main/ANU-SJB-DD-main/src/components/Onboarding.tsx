@@ -72,14 +72,14 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
             </button>
           </div>
 
-          <label className="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/30 cursor-pointer group">
+          <label className="flex items-center gap-4 p-5 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border-2 border-emerald-200 dark:border-emerald-800 cursor-pointer group shadow-sm transition-all hover:bg-emerald-100 dark:hover:bg-emerald-900/30">
             <input
               type="checkbox"
               checked={agreed}
               onChange={(e) => setAgreed(e.target.checked)}
-              className="w-5 h-5 rounded-lg border-2 border-emerald-500 accent-emerald-600 cursor-pointer"
+              className="w-6 h-6 rounded-lg border-2 border-emerald-600 accent-emerald-600 cursor-pointer"
             />
-            <span className="text-[10px] font-bold text-emerald-800 dark:text-emerald-400 leading-tight">
+            <span className="text-xs sm:text-sm font-black text-emerald-950 dark:text-emerald-300 leading-tight">
               I have read and agree to all judicial protocols and data privacy standards.
             </span>
           </label>
@@ -188,10 +188,10 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
                 <div className="relative z-10">{steps[step].icon}</div>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-4 leading-tight">
+              <h2 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter mb-6 leading-tight">
                 {steps[step].title}
               </h2>
-              <p className="text-slate-50 dark:text-slate-400 font-medium leading-relaxed text-sm sm:text-base mb-4">
+              <p className="text-slate-800 dark:text-slate-100 font-bold leading-relaxed text-base sm:text-lg max-w-sm mx-auto">
                 {steps[step].description}
               </p>
               {(steps[step] as any).content}

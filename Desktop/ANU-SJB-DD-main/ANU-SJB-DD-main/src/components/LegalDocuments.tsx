@@ -42,53 +42,53 @@ export default function LegalDocuments({ type, onClose }: LegalModalProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 sm:p-10 custom-scrollbar bg-slate-50/50 dark:bg-slate-950/30">
-          <div className="prose dark:prose-invert max-w-none space-y-8 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+          <div className="prose dark:prose-invert max-w-none space-y-10 text-base text-slate-800 dark:text-slate-100 leading-relaxed font-bold">
             {type === 'terms' ? (
               <>
-                <section>
-                  <h3 className="text-slate-900 dark:text-white font-bold uppercase tracking-tight flex items-center gap-2">
-                    <span className="w-1.5 h-6 bg-emerald-500 rounded-full" /> 1. Judicial Authorization
+                <section className="space-y-3">
+                  <h3 className="text-slate-900 dark:text-white text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                    <span className="w-2 h-8 bg-emerald-500 rounded-full" /> 1. Judicial Authorization
                   </h3>
-                  <p>By accessing the ANU SJB DOCKET, you acknowledge that you are a registered student or authorized faculty member of All Nations University. Any attempt to provide false identification or impersonate another party is a violation of university code.</p>
+                  <p className="pl-4 border-l-2 border-slate-200 dark:border-slate-800">By accessing the ANU SJB DOCKET, you acknowledge that you are a registered student or authorized faculty member of All Nations University. Any attempt to provide false identification or impersonate another party is a violation of university code.</p>
                 </section>
-                <section>
-                  <h3 className="text-slate-900 dark:text-white font-bold uppercase tracking-tight flex items-center gap-2">
-                    <span className="w-1.5 h-6 bg-emerald-500 rounded-full" /> 2. Data Integrity & Use
+                <section className="space-y-3">
+                  <h3 className="text-slate-900 dark:text-white text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                    <span className="w-2 h-8 bg-emerald-500 rounded-full" /> 2. Data Integrity & Use
                   </h3>
-                  <p>All filings, evidence, and deliberations committed to this ledger are legally binding within the jurisdiction of the Student Judicial Body. Users are prohibited from submitting malicious data, falsified evidence, or unauthorized recordings.</p>
+                  <p className="pl-4 border-l-2 border-slate-200 dark:border-slate-800">All filings, evidence, and deliberations committed to this ledger are legally binding within the jurisdiction of the Student Judicial Body. Users are prohibited from submitting malicious data, falsified evidence, or unauthorized recordings.</p>
                 </section>
-                <section>
-                  <h3 className="text-slate-900 dark:text-white font-bold uppercase tracking-tight flex items-center gap-2">
-                    <span className="w-1.5 h-6 bg-emerald-500 rounded-full" /> 3. Biometric Verification
+                <section className="space-y-3">
+                  <h3 className="text-slate-900 dark:text-white text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                    <span className="w-2 h-8 bg-emerald-500 rounded-full" /> 3. Biometric Verification
                   </h3>
-                  <p>Certain judicial actions, including final directives and summons acknowledgments, require biometric verification. You agree that your biometric data is processed locally on your device and is never transmitted to our servers.</p>
+                  <p className="pl-4 border-l-2 border-slate-200 dark:border-slate-800">Certain judicial actions, including final directives and summons acknowledgments, require biometric verification. You agree that your biometric data is processed locally on your device and is never transmitted to our servers.</p>
                 </section>
               </>
             ) : (
               <>
-                <section>
-                  <h3 className="text-slate-900 dark:text-white font-bold uppercase tracking-tight flex items-center gap-2">
-                    <span className="w-1.5 h-6 bg-emerald-500 rounded-full" /> 1. Information Collection
+                <section className="space-y-3">
+                  <h3 className="text-slate-900 dark:text-white text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                    <span className="w-2 h-8 bg-emerald-500 rounded-full" /> 1. Information Collection
                   </h3>
-                  <p>The SJB DOCKET collects Student IDs, University Email Addresses, and Profile Images solely for the purpose of maintaining a secure judicial record. We do not sell or share your data with third-party advertising networks.</p>
+                  <p className="pl-4 border-l-2 border-slate-200 dark:border-slate-800">The SJB DOCKET collects Student IDs, University Email Addresses, and Profile Images solely for the purpose of maintaining a secure judicial record. We do not sell or share your data with third-party advertising networks.</p>
                 </section>
-                <section>
-                  <h3 className="text-slate-900 dark:text-white font-bold uppercase tracking-tight flex items-center gap-2">
-                    <span className="w-1.5 h-6 bg-emerald-500 rounded-full" /> 2. Evidence Storage
+                <section className="space-y-3">
+                  <h3 className="text-slate-900 dark:text-white text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                    <span className="w-2 h-8 bg-emerald-500 rounded-full" /> 2. Evidence Storage
                   </h3>
-                  <p>Uploaded evidence Artifacts (PDFs and Images) are stored in encrypted cloud silos. Access is strictly limited based on Role-Based Access Control (RBAC), viewable only by the Petitioner, Respondent, and presiding Board members.</p>
+                  <p className="pl-4 border-l-2 border-slate-200 dark:border-slate-800">Uploaded evidence Artifacts (PDFs and Images) are stored in encrypted cloud silos. Access is strictly limited based on Role-Based Access Control (RBAC), viewable only by the Petitioner, Respondent, and presiding Board members.</p>
                 </section>
-                <section>
-                  <h3 className="text-slate-900 dark:text-white font-bold uppercase tracking-tight flex items-center gap-2">
-                    <span className="w-1.5 h-6 bg-emerald-500 rounded-full" /> 3. Retention Policy
+                <section className="space-y-3">
+                  <h3 className="text-slate-900 dark:text-white text-lg font-black uppercase tracking-tight flex items-center gap-2">
+                    <span className="w-2 h-8 bg-emerald-500 rounded-full" /> 3. Retention Policy
                   </h3>
-                  <p>Judicial records are retained for the duration of the current academic cycle plus two years, after which they are moved to deep archive or purged in accordance with University policy.</p>
+                  <p className="pl-4 border-l-2 border-slate-200 dark:border-slate-800">Judicial records are retained for the duration of the current academic cycle plus two years, after which they are moved to deep archive or purged in accordance with University policy.</p>
                 </section>
               </>
             )}
 
-            <div className="pt-10 border-t border-slate-100 dark:border-slate-800 text-center">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">End of Document • Ref: ANU-SJB-LGL-2024</p>
+            <div className="pt-10 border-t border-slate-200 dark:border-slate-800 text-center">
+              <p className="text-xs font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.2em]">End of Official Document • Ref: ANU-SJB-LGL-2024</p>
             </div>
           </div>
         </div>
