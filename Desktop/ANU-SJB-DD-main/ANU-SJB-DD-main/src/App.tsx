@@ -160,6 +160,8 @@ export default function App() {
             } else {
               setUser({ ...data, uid: firebaseUser.uid, emailVerified: firebaseUser.emailVerified });
             }
+            // Save identity hint for recognized login
+            localStorage.setItem('last_known_user', data.displayName || 'Recognized Profile');
           }
         } else {
           setUser(null);
@@ -175,8 +177,18 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950">
-        <Loader2 className="w-8 text-emerald-600 animate-spin" />
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center"
+        >
+          <div className="w-20 h-20 bg-white dark:bg-slate-900 rounded-[1.5rem] flex items-center justify-center mb-6 shadow-2xl border border-slate-100 dark:border-slate-800 p-2">
+            <img src={LOGO_URL} alt="ANU" className="w-full h-full object-contain" />
+          </div>
+          <Loader2 className="w-6 h-6 text-emerald-600 animate-spin" />
+          <p className="mt-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">Verifying Protocol</p>
+        </motion.div>
       </div>
     );
   }
@@ -354,6 +366,12 @@ export default function App() {
 
 function LandingPage({ onLogin }: { onLogin: () => void }) {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [lastUser, setLastUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('last_known_user');
+    if (saved) setLastUser(saved);
+  }, []);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
@@ -374,9 +392,16 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
           <img src={LOGO_URL} alt="ANU Logo" className="w-full h-full object-contain" />
         </div>
 
-        <div className="inline-flex items-center gap-3 px-4 py-2 bg-slate-900 dark:bg-emerald-600 text-white rounded-2xl mb-8 shadow-xl">
-          <span className="font-bold tracking-widest text-xs uppercase">Judicial Portal</span>
-        </div>
+        {lastUser ? (
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 rounded-full mb-8 border border-emerald-100 dark:border-emerald-800 animate-in fade-in zoom-in">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="font-bold tracking-widest text-[10px] uppercase">Welcome Back, {lastUser.split(' ')[0]}</span>
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-3 px-4 py-2 bg-slate-900 dark:bg-emerald-600 text-white rounded-2xl mb-8 shadow-xl">
+            <span className="font-bold tracking-widest text-xs uppercase">Judicial Portal</span>
+          </div>
+        )}
 
         <h1 className="text-5xl font-black text-slate-900 dark:text-white mb-6 tracking-tight uppercase leading-none">ANU SJB DOCKET</h1>
         <p className="text-slate-500 dark:text-slate-400 text-lg mb-12 font-medium max-w-sm">The high-security judicial ledger and secure petition management system for the Student Judicial Board.</p>
@@ -388,7 +413,7 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
         >
           <span className="relative z-10 flex items-center justify-center gap-3">
             {isLoggingIn ? <Loader2 className="w-4 h-4 animate-spin" /> : <img src="https://www.google.com/favicon.ico" alt="G" className="w-4 h-4" />}
-            {isLoggingIn ? 'Authenticating...' : 'Authenticate Identity'}
+            {isLoggingIn ? 'Authenticating...' : lastUser ? `Continue as ${lastUser.split(' ')[0]}` : 'Authenticate Identity'}
           </span>
         </button>
       </motion.div>
