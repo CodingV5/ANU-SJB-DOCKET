@@ -7,7 +7,7 @@ import LegalDocuments from './LegalDocuments';
 
 interface OnboardingProps {
   user: any;
-  onComplete: () => void;
+  onComplete: (studentId: string) => void;
 }
 
 export default function Onboarding({ user, onComplete }: OnboardingProps) {
@@ -144,7 +144,7 @@ export default function Onboarding({ user, onComplete }: OnboardingProps) {
         legalAgreedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
-      onComplete();
+      onComplete(studentId.trim());
     } catch (error) {
       console.error("Onboarding Error:", error);
       alert("Protocol initialization failed.");

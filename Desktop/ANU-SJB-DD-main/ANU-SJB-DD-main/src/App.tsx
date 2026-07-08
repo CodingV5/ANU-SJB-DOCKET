@@ -196,7 +196,10 @@ export default function App() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col md:flex-row text-slate-900 dark:text-slate-100 transition-colors duration-300">
       <AnimatePresence>
         {!user.hasCompletedOnboarding && (
-          <Onboarding user={user} onComplete={() => setUser({ ...user, hasCompletedOnboarding: true })} />
+          <Onboarding
+            user={user}
+            onComplete={(studentId) => setUser({ ...user, hasCompletedOnboarding: true, studentId })}
+          />
         )}
       </AnimatePresence>
 
@@ -350,6 +353,17 @@ export default function App() {
 }
 
 function LandingPage({ onLogin }: { onLogin: () => void }) {
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLogin = async () => {
+    setIsLoggingIn(true);
+    try {
+      await onLogin();
+    } catch (e) {
+      setIsLoggingIn(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden transition-colors duration-300">
       <div className="absolute inset-0 pointer-events-none opacity-50 dark:opacity-20">
@@ -367,10 +381,14 @@ function LandingPage({ onLogin }: { onLogin: () => void }) {
         <h1 className="text-5xl font-black text-slate-900 dark:text-white mb-6 tracking-tight uppercase leading-none">ANU SJB DOCKET</h1>
         <p className="text-slate-500 dark:text-slate-400 text-lg mb-12 font-medium max-w-sm">The high-security judicial ledger and secure petition management system for the Student Judicial Board.</p>
 
-        <button onClick={onLogin} className="group relative w-full max-w-xs py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs overflow-hidden transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-slate-200 dark:shadow-none">
+        <button
+          onClick={handleLogin}
+          disabled={isLoggingIn}
+          className="group relative w-full max-w-xs py-5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl font-black uppercase tracking-widest text-xs overflow-hidden transition-all hover:scale-[1.02] active:scale-95 shadow-2xl shadow-slate-200 dark:shadow-none disabled:opacity-70"
+        >
           <span className="relative z-10 flex items-center justify-center gap-3">
-            <img src="https://www.google.com/favicon.ico" alt="G" className="w-4 h-4" />
-            Authenticate Identity
+            {isLoggingIn ? <Loader2 className="w-4 h-4 animate-spin" /> : <img src="https://www.google.com/favicon.ico" alt="G" className="w-4 h-4" />}
+            {isLoggingIn ? 'Authenticating...' : 'Authenticate Identity'}
           </span>
         </button>
       </motion.div>

@@ -15,14 +15,15 @@ export const storage = getStorage(app);
 export const auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 
-// Force clear cache once on startup to fix "Ghost Records"
+// Force clear cache once on startup if requested via flag
 const clearOldData = async () => {
+  if (localStorage.getItem('PURGE_CACHE_v2')) return;
   try {
-    // Only clear if we aren't already initialized in a way that blocks login
     await clearIndexedDbPersistence(db);
+    localStorage.setItem('PURGE_CACHE_v2', 'true');
     console.log("Judicial cache synchronized.");
   } catch (e) {
-    console.log("Syncing with live ledger...");
+    console.log("Persistence active.");
   }
 };
 clearOldData();
