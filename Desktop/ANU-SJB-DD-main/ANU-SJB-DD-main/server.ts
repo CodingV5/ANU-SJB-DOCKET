@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from 'dotenv';
 import admin from 'firebase-admin';
 
@@ -40,7 +40,7 @@ async function startServer() {
   });
 
   // Gemini Initialization
-  const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY!);
+  const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
   // API Routes
   app.post('/api/notify-summon', async (req, res) => {

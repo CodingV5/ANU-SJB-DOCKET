@@ -127,6 +127,93 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
     doc.save(`Official_Directive_${caseData.id.slice(0, 8)}.pdf`);
   };
 
+  const exportFullCaseFile = (caseData: Case) => {
+    const doc = new jsPDF();
+    let yPos = 20;
+
+    // Header
+    doc.setFillColor("#0f172a");
+    doc.rect(0, 0, 210, 40, 'F');
+    doc.setTextColor("#ffffff");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text("ANU STUDENT JUDICIAL BOARD", 105, 20, { align: "center" });
+    doc.setFontSize(12);
+    doc.text("COMPLETE JUDICIAL DOSSIER", 105, 30, { align: "center" });
+
+    yPos = 55;
+    doc.setTextColor("#000000");
+    doc.setFontSize(16);
+    doc.text(`CASE REF: ${caseData.docketId || caseData.id.toUpperCase()}`, 20, yPos);
+
+    yPos += 15;
+    doc.setFontSize(11);
+    doc.text("IDENTIFICATION DATA:", 20, yPos);
+    yPos += 8;
+    doc.setFont("helvetica", "normal");
+    doc.text(`Subject: ${caseData.title}`, 20, yPos);
+    yPos += 7;
+    doc.text(`Petitioner: ${caseData.petitionerName} (${caseData.petitionerEmail})`, 20, yPos);
+    yPos += 7;
+    doc.text(`Respondent: ${caseData.respondentName || 'N/A'} (${caseData.respondentEmail || 'N/A'})`, 20, yPos);
+    yPos += 7;
+    doc.text(`Current Status: ${caseData.status.toUpperCase()}`, 20, yPos);
+
+    yPos += 15;
+    doc.setFont("helvetica", "bold");
+    doc.text("PETITION NARRATIVE:", 20, yPos);
+    yPos += 8;
+    doc.setFont("helvetica", "normal");
+    const splitDesc = doc.splitTextToSize(caseData.description, 170);
+    doc.text(splitDesc, 20, yPos);
+    yPos += (splitDesc.length * 5) + 10;
+
+    if (caseData.evidence && caseData.evidence.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.text("EVIDENCE INVENTORY:", 20, yPos);
+      yPos += 8;
+      doc.setFont("helvetica", "normal");
+      caseData.evidence.forEach((art: any, i: number) => {
+        const isObject = typeof art === 'object';
+        const category = isObject ? art.category : 'General';
+        const name = isObject ? art.name : `Artifact ${i + 1}`;
+        const hash = isObject ? art.hash : 'Legacy Record';
+        doc.text(`${i+1}. [${category}] ${name}`, 25, yPos);
+        yPos += 5;
+        doc.setFontSize(8);
+        doc.setTextColor("#64748b");
+        doc.text(`   Integrity Hash: ${hash}`, 25, yPos);
+        yPos += 7;
+        doc.setTextColor("#000000");
+        doc.setFontSize(11);
+
+        if (yPos > 270) { doc.addPage(); yPos = 20; }
+      });
+      yPos += 10;
+    }
+
+    if (caseData.activityLog && caseData.activityLog.length > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.text("JUDICIAL AUDIT TRAIL:", 20, yPos);
+      yPos += 8;
+      doc.setFontSize(9);
+      caseData.activityLog.forEach((log: any) => {
+        doc.setFont("helvetica", "bold");
+        doc.text(`${new Date(log.timestamp).toLocaleString()} - ${log.status.toUpperCase()}`, 25, yPos);
+        yPos += 5;
+        doc.setFont("helvetica", "normal");
+        doc.text(`Action by: ${log.actorName}`, 30, yPos);
+        yPos += 5;
+        doc.text(`Note: ${log.note}`, 30, yPos);
+        yPos += 8;
+
+        if (yPos > 270) { doc.addPage(); yPos = 20; }
+      });
+    }
+
+    doc.save(`Full_Dossier_${caseData.docketId?.replace(/\//g, '_') || caseData.id.slice(0, 8)}.pdf`);
+  };
+
   useEffect(() => {
     if (initialCaseId && cases.length > 0) {
       const found = cases.find(c => c.id === initialCaseId);
@@ -318,9 +405,22 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
                   </div>
                   <div className="flex gap-2">
                     {(user.role === 'judge' || user.role === 'court_clerk') && (
-                      <button onClick={() => getAiBrief(selectedCase)} disabled={summarizing} className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-900/20 active:scale-95 disabled:opacity-50">
-                        {summarizing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles size={20} />}
-                      </button>
+                      <>
+                        <button
+                          onClick={() => exportFullCaseFile(selectedCase)}
+                          title="Export Full Dossier"
+                          className="p-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-2xl hover:bg-slate-200 transition-all shadow-sm active:scale-95"
+                        >
+                          <FileText size={20} />
+                        </button>
+                        <button
+                          onClick={() => getAiBrief(selectedCase)}
+                          disabled={summarizing}
+                          className="p-3 bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-900/20 active:scale-95 disabled:opacity-50"
+                        >
+                          {summarizing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Sparkles size={20} />}
+                        </button>
+                      </>
                     )}
                     <button onClick={handleCloseModal} className="p-3 bg-slate-50 dark:bg-slate-800 rounded-2xl text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"><X size={24} /></button>
                   </div>
