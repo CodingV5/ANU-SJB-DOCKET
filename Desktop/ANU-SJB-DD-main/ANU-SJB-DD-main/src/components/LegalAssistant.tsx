@@ -45,12 +45,16 @@ export default function LegalAssistant() {
         })
       });
 
-      if (!response.ok) throw new Error('Assistant is currently offline.');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Assistant is currently offline.');
+      }
 
       const data = await response.json();
       setMessages(prev => [...prev, { role: 'model', text: data.response }]);
     } catch (error) {
-      setMessages(prev => [...prev, { role: 'model', text: "Apologies, the secure judicial relay is currently unavailable. Please try again later or contact the Board Registrar." }]);
+      const msg = error instanceof Error ? error.message : "Apologies, the secure judicial relay is currently unavailable.";
+      setMessages(prev => [...prev, { role: 'model', text: msg }]);
     } finally {
       setLoading(false);
     }

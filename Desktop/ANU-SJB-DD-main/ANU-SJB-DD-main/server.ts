@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from "@google/genai";
@@ -29,7 +30,14 @@ async function startServer() {
   const app = express();
   const PORT = process.env.PORT || 3000;
 
+  app.use(cors());
   app.use(express.json());
+
+  // Log incoming requests for debugging
+  app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+  });
 
   // Gemini Initialization
   const genAI = new GoogleGenAI(process.env.GEMINI_API_KEY!);
@@ -155,7 +163,8 @@ async function startServer() {
       res.json({ response: result.response.text() });
     } catch (error) {
       console.error('Legal Assistant Error:', error);
-      res.status(500).json({ error: 'Assistant is currently offline.' });
+      const errorMessage = error instanceof Error ? error.message : 'Assistant is currently offline.';
+      res.status(500).json({ error: errorMessage });
     }
   });
 
