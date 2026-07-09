@@ -124,6 +124,41 @@ async function startServer() {
     }
   });
 
+  app.post('/api/legal-assistant', async (req, res) => {
+    try {
+      const { message, history } = req.body;
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const chat = model.startChat({
+        history: history || [],
+        generationConfig: { maxOutputTokens: 500 }
+      });
+
+      const systemPrompt = `You are the ANU Student Judicial Board (SJB) AI Assistant.
+      Your goal is to help students navigate the ANU judicial system procedures.
+
+      OFFICIAL ANU PROCEDURAL STEPS:
+      1. FILING: Petitioner submits a formal case with Title, Description, and Respondent Email.
+      2. EVIDENCE: High-integrity digital artifacts (images/PDFs) must be attached.
+      3. SUMMONS: The Board issues a digital notice to the respondent via the relay.
+      4. REVIEW: The Court Clerk or Judge examines the preliminary evidence.
+      5. HEARING: A formal session is scheduled via the app calendar.
+      6. RESOLUTION: The Judge issues an official Directive and a downloadable Certificate.
+
+      RULES:
+      1. ONLY explain these steps.
+      2. NEVER provide legal interpretations of specific case facts.
+      3. If asked about the SRC Constitution, explain that it is the supreme governing document of the student body.
+      4. Remain neutral and authoritative.`;
+
+      const result = await chat.sendMessage(`${systemPrompt}\n\nUser Question: ${message}`);
+      res.json({ response: result.response.text() });
+    } catch (error) {
+      console.error('Legal Assistant Error:', error);
+      res.status(500).json({ error: 'Assistant is currently offline.' });
+    }
+  });
+
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
   });

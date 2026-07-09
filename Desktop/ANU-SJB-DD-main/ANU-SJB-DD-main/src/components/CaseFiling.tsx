@@ -5,6 +5,21 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ShieldCheck, Send, Loader2, Info, Image as ImageIcon, X, Paperclip } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+interface EvidenceArtifact {
+  url: string;
+  category: string;
+  name: string;
+  hash: string;
+}
+
+// Helper to generate a SHA-256 hash of a file for integrity proof
+const generateFileHash = async (file: File): Promise<string> => {
+  const arrayBuffer = await file.arrayBuffer();
+  const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
 export default function CaseFiling({ user, onSuccess }: { user: any; onSuccess: () => void }) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -16,8 +31,10 @@ export default function CaseFiling({ user, onSuccess }: { user: any; onSuccess: 
     description: '',
     respondentName: '',
     respondentEmail: '',
-    evidence: [] as string[],
+    evidence: [] as EvidenceArtifact[],
   });
+
+  const categories = ["CCTV Footage", "Chat Log", "Witness Statement", "Formal Letter", "Other"];
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -29,10 +46,16 @@ export default function CaseFiling({ user, onSuccess }: { user: any; onSuccess: 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       try {
+        const hash = await generateFileHash(file);
         const storageRef = ref(storage, `evidence/${user.uid}/${Date.now()}_${file.name}`);
         const snapshot = await uploadBytes(storageRef, file);
         const downloadURL = await getDownloadURL(snapshot.ref);
-        newEvidence.push(downloadURL);
+        newEvidence.push({
+          url: downloadURL,
+          category: 'Other',
+          name: file.name,
+          hash: hash
+        });
       } catch (error) {
         console.error("Upload error:", error);
         alert(`Failed to upload ${file.name}`);
@@ -42,6 +65,12 @@ export default function CaseFiling({ user, onSuccess }: { user: any; onSuccess: 
     setFormData({ ...formData, evidence: newEvidence });
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const updateEvidenceCategory = (index: number, category: string) => {
+    const newEvidence = [...formData.evidence];
+    newEvidence[index].category = category;
+    setFormData({ ...formData, evidence: newEvidence });
   };
 
   const removeEvidence = (index: number) => {
@@ -230,29 +259,44 @@ export default function CaseFiling({ user, onSuccess }: { user: any; onSuccess: 
               />
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {formData.evidence.map((url, index) => (
-                <div key={index} className="relative aspect-square rounded-xl overflow-hidden border-2 border-slate-100 dark:border-slate-800 group shadow-sm bg-white dark:bg-slate-800">
-                  {url.includes('.pdf') ? (
-                    <div className="w-full h-full bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center text-slate-400">
-                      <Paperclip size={24} />
-                    </div>
-                  ) : (
-                    <img src={url} alt="Evidence" className="w-full h-full object-cover" />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeEvidence(index)}
-                    className="absolute top-1 right-1 p-1 bg-white/90 dark:bg-slate-900/90 text-red-500 rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-md"
-                  >
-                    <X size={14} />
-                  </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {formData.evidence.map((artifact, index) => (
+                <div key={index} className="relative bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm group">
+                  <div className="aspect-video relative overflow-hidden bg-slate-100 dark:bg-slate-900">
+                    {artifact.url.toLowerCase().includes('.pdf') ? (
+                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <Paperclip size={32} />
+                      </div>
+                    ) : (
+                      <img src={artifact.url} alt="Evidence" className="w-full h-full object-cover" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => removeEvidence(index)}
+                      className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-lg active:scale-90"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+
+                  <div className="p-3 space-y-2">
+                    <p className="text-[9px] font-mono text-slate-400 truncate px-1">{artifact.name}</p>
+                    <select
+                      className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 outline-none focus:ring-2 focus:ring-emerald-500/50"
+                      value={artifact.category}
+                      onChange={(e) => updateEvidenceCategory(index, e.target.value)}
+                    >
+                      {categories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               ))}
               {uploading && (
-                <div className="aspect-square rounded-xl bg-slate-50 dark:bg-slate-800/50 border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 gap-2">
-                  <Loader2 size={20} className="animate-spin" />
-                  <span className="text-[8px] font-black uppercase tracking-tighter">Encrypting...</span>
+                <div className="aspect-video rounded-2xl bg-slate-50 dark:bg-slate-800/50 border-2 border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-slate-400 gap-2">
+                  <Loader2 size={24} className="animate-spin" />
+                  <span className="text-[10px] font-black uppercase tracking-tighter">Securing Asset...</span>
                 </div>
               )}
             </div>

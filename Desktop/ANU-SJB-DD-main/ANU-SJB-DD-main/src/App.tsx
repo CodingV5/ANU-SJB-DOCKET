@@ -3,7 +3,7 @@ import { auth, signInWithGoogle, logout, db, storage } from './lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Gavel, Briefcase, Archive, Bell, LogOut, Loader2, ShieldCheck, User as UserIcon, Moon, Sun, LayoutDashboard, FileSpreadsheet, Users, Menu, X as CloseIcon, Camera, Scale } from 'lucide-react';
+import { Gavel, Briefcase, Archive, Bell, LogOut, Loader2, ShieldCheck, User as UserIcon, Moon, Sun, LayoutDashboard, FileSpreadsheet, Users, Menu, X as CloseIcon, Camera, Scale, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Dashboard from './components/Dashboard';
 import CaseFiling from './components/CaseFiling';
@@ -13,6 +13,9 @@ import UserManagement from './components/UserManagement';
 import Onboarding from './components/Onboarding';
 import EmailVerification from './components/EmailVerification';
 import LegalDocuments from './components/LegalDocuments';
+import CalendarView from './components/CalendarView';
+import LegalAssistant from './components/LegalAssistant';
+
 
 import { App as CapacitorApp } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -46,7 +49,7 @@ function LogoIcon({ className = "w-5 h-5" }: { className?: string }) {
 export default function App() {
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'filing' | 'archive' | 'summons' | 'users'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'filing' | 'archive' | 'summons' | 'users' | 'calendar'>('dashboard');
   const [pendingCaseId, setPendingCaseId] = useState<string | null>(null);
   const [pendingToken, setPendingToken] = useState<string | null>(null);
   const [darkMode, setDarkMode] = useState(false);
@@ -199,6 +202,7 @@ export default function App() {
   const navItems = [
     { id: 'dashboard', label: 'Docket', icon: <LayoutDashboard size={20} /> },
     { id: 'filing', label: 'File', icon: <FileSpreadsheet size={20} /> },
+    { id: 'calendar', label: 'Calendar', icon: <Calendar size={20} />, roles: ['judge', 'court_clerk'] },
     { id: 'archive', label: 'History', icon: <Archive size={20} />, roles: ['judge', 'court_clerk'] },
     { id: 'summons', label: 'Summons', icon: <Bell size={20} />, roles: ['judge', 'court_clerk'] },
     { id: 'users', label: 'Staff', icon: <Users size={20} />, roles: ['judge', 'court_clerk'] },
@@ -327,6 +331,7 @@ export default function App() {
             >
               {activeTab === 'dashboard' && <Dashboard user={user} initialCaseId={pendingCaseId} onModalClose={() => setPendingCaseId(null)} />}
               {activeTab === 'filing' && <CaseFiling user={user} onSuccess={() => setActiveTab('dashboard')} />}
+              {activeTab === 'calendar' && <CalendarView user={user} onViewCase={(id) => { setPendingCaseId(id); setActiveTab('dashboard'); }} />}
               {activeTab === 'archive' && <PrecedentArchive user={user} />}
               {activeTab === 'summons' && <SummonsSystem user={user} onViewCase={(id) => { setPendingCaseId(id); setActiveTab('dashboard'); }} />}
               {activeTab === 'users' && <UserManagement currentUser={user} />}
@@ -360,6 +365,7 @@ export default function App() {
           </button>
         ))}
       </nav>
+      <LegalAssistant />
     </div>
   );
 }

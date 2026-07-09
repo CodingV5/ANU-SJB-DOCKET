@@ -20,7 +20,7 @@ interface Case {
   petitionerEmail?: string;
   respondentName?: string;
   respondentEmail?: string;
-  evidence?: string[];
+  evidence?: (string | { url: string, category: string, name: string, hash?: string })[];
   deliberations?: any[];
   hearingDate?: string;
   finalDirective?: string;
@@ -66,12 +66,17 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ description: caseData.description, title: caseData.title })
       });
-      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Server ${response.status}: ${errorText.slice(0, 50)}`);
+      }
+
       const data = await response.json();
       setAiBrief(data.summary);
     } catch (e) {
       console.error("AI Brief Error:", e);
-      alert("AI Analysis is temporarily offline.");
+      alert(`AI Assistant Connection Issue: ${e instanceof Error ? e.message : 'Unknown Error'}. \n\nPlease ensure your Render server is awake and live.`);
     } finally {
       setSummarizing(false);
     }
@@ -394,6 +399,48 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
                     {selectedCase.description}
                   </div>
                 </div>
+
+                {selectedCase.evidence && selectedCase.evidence.length > 0 && (
+                  <div className="space-y-6 mb-16">
+                    <h4 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Evidence Artifacts</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {selectedCase.evidence.map((art: any, i: number) => {
+                        const isObject = typeof art === 'object';
+                        const url = isObject ? art.url : art;
+                        const category = isObject ? art.category : 'General Evidence';
+                        const name = isObject ? art.name : `Artifact ${i + 1}`;
+                        const hash = isObject ? art.hash : null;
+                        const isPdf = url.toLowerCase().includes('.pdf');
+
+                        return (
+                          <div key={i} className="flex flex-col gap-2">
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-4 group hover:border-emerald-500/50 transition-all"
+                            >
+                              <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-xl flex items-center justify-center text-slate-400 shrink-0 shadow-sm">
+                                {isPdf ? <Paperclip size={24} /> : <ImageIcon size={24} />}
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[8px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest mb-1">{category}</p>
+                                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{name}</p>
+                              </div>
+                              <ExternalLink size={14} className="text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                            </a>
+                            {hash && (
+                              <div className="px-4 flex items-center gap-2">
+                                <ShieldCheck size={10} className="text-emerald-500" />
+                                <span className="text-[7px] font-mono text-slate-400 truncate tracking-tighter uppercase">Integrity Hash: {hash.slice(0, 32)}...</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {selectedCase.finalDirective && (
                   <div className="mb-16 bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-500/20 rounded-[1.5rem] p-8 relative overflow-hidden group">
