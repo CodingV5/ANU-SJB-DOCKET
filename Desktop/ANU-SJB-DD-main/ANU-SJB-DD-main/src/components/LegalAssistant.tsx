@@ -41,7 +41,11 @@ export default function LegalAssistant() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: userMessage,
-          history: messages.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
+          // Gemini requires history to start with a 'user' message.
+          // We filter out the initial welcome message from the model.
+          history: messages
+            .filter((_, i) => i > 0)
+            .map(m => ({ role: m.role, parts: [{ text: m.text }] }))
         })
       });
 
