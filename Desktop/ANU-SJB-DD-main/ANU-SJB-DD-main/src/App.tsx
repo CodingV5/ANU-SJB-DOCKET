@@ -14,7 +14,6 @@ import Onboarding from './components/Onboarding';
 import EmailVerification from './components/EmailVerification';
 import LegalDocuments from './components/LegalDocuments';
 import CalendarView from './components/CalendarView';
-import LegalAssistant from './components/LegalAssistant';
 
 
 import { App as CapacitorApp } from '@capacitor/app';
@@ -365,7 +364,6 @@ export default function App() {
           </button>
         ))}
       </nav>
-      <LegalAssistant />
     </div>
   );
 }
