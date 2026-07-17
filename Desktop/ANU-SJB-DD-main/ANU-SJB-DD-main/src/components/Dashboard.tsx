@@ -32,6 +32,21 @@ interface Case {
   }[];
 }
 
+function StatusActionBtn({ label, onClick, active }: { label: string, onClick: () => void, active: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border-2 ${
+        active
+          ? 'bg-slate-900 dark:bg-emerald-600 text-white border-slate-900 dark:border-emerald-600 shadow-lg'
+          : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-100 dark:border-slate-700 hover:border-emerald-500 hover:text-emerald-600'
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
 export default function Dashboard({ user, initialCaseId, onModalClose }: { user: any; initialCaseId?: string | null; onModalClose?: () => void }) {
   const [cases, setCases] = useState<Case[]>([]);
   const [summonsCount, setSummonsCount] = useState(0);
@@ -230,26 +245,34 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
   useEffect(() => {
     const casesRef = collection(db, 'cases');
     const summonsRef = collection(db, 'summons');
+
+    // Simplified petitioner query to avoid "Missing Index" errors
     const qCases = user.role === 'petitioner'
-      ? query(casesRef, where('petitionerId', '==', user.uid), orderBy('filedAt', 'desc'))
+      ? query(casesRef, where('petitionerId', '==', user.uid))
       : query(casesRef, orderBy('filedAt', 'desc'));
 
     const unsubscribeCases = onSnapshot(qCases, (snapshot) => {
-      const casesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Case[];
+      let casesData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Case[];
+
+      // Manually sort for petitioners since we removed the DB-side order
+      if (user.role === 'petitioner') {
+        casesData = casesData.sort((a, b) => {
+          const timeA = a.filedAt?.toMillis() || 0;
+          const timeB = b.filedAt?.toMillis() || 0;
+          return timeB - timeA;
+        });
+      }
+
       setCases(casesData);
       setLoading(false);
 
-      // Sync selected case if modal is open to reflect remote deletions or updates
       if (selectedCase) {
         const updated = casesData.find(c => c.id === selectedCase.id);
-        if (!updated) {
-          setSelectedCase(null); // Case was deleted on server
-        } else {
-          setSelectedCase(updated);
-        }
+        if (!updated) setSelectedCase(null);
+        else setSelectedCase(updated);
       }
     }, (error) => {
-      handleFirestoreError(error, OperationType.LIST, 'cases');
+      console.error("Dashboard Sync Error:", error);
       setLoading(false);
     });
 
