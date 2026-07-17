@@ -112,9 +112,38 @@ export default function App() {
       try {
         await StatusBar.setStyle({ style: darkMode ? Style.Dark : Style.Light });
         await SplashScreen.hide();
+
         const permission = await PushNotifications.requestPermissions();
-        if (permission.receive === 'granted') await PushNotifications.register();
-        PushNotifications.addListener('registration', (token) => setPendingToken(token.value));
+        if (permission.receive === 'granted') {
+          await PushNotifications.register();
+        }
+
+        // Handle token registration
+        PushNotifications.addListener('registration', (token) => {
+          setPendingToken(token.value);
+        });
+
+        // Handle notification received while app is open
+        PushNotifications.addListener('pushNotificationReceived', (notification) => {
+          console.log('Push received:', notification);
+          // Standard alert for foreground notifications
+          if (notification.title || notification.body) {
+            alert(`${notification.title}\n\n${notification.body}`);
+          }
+        });
+
+        // Handle user clicking on a notification
+        PushNotifications.addListener('pushNotificationActionPerformed', (notification) => {
+          console.log('Push action performed:', notification);
+          const data = notification.notification.data;
+          if (data.type === 'summons') {
+            setActiveTab('summons');
+          } else if (data.caseId) {
+            setPendingCaseId(data.caseId);
+            setActiveTab('dashboard');
+          }
+        });
+
       } catch (e) {
         console.error('Native init error:', e);
       }
@@ -203,7 +232,7 @@ export default function App() {
     { id: 'filing', label: 'File', icon: <FileSpreadsheet size={20} /> },
     { id: 'calendar', label: 'Calendar', icon: <Calendar size={20} />, roles: ['judge', 'court_clerk'] },
     { id: 'archive', label: 'History', icon: <Archive size={20} />, roles: ['judge', 'court_clerk'] },
-    { id: 'summons', label: 'Summons', icon: <Bell size={20} />, roles: ['judge', 'court_clerk'] },
+    { id: 'summons', label: 'Summons', icon: <Bell size={20} /> },
     { id: 'users', label: 'Staff', icon: <Users size={20} />, roles: ['judge', 'court_clerk'] },
   ].filter(item => !item.roles || item.roles.includes(user.role));
 

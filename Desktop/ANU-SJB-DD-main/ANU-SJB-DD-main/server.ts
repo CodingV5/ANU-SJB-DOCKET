@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import nodemailer from 'nodemailer';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from 'dotenv';
@@ -42,6 +43,15 @@ async function startServer() {
   // Gemini Initialization
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
+  // Email Transporter Initialization
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'anustudentjudicialbody6@gmail.com',
+      pass: process.env.EMAIL_APP_PASSWORD, // Use App Password for security
+    },
+  });
+
   // API Routes
   app.post('/api/notify-summon', async (req, res) => {
     try {
@@ -51,7 +61,54 @@ async function startServer() {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
-      // 1. Get the recipient's FCM token from Firestore
+      // 1. Use Gemini to generate a professional judicial letter body
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const prompt = `Write a formal and authoritative judicial summon letter body for ${recipientName} regarding the case "${caseTitle}".
+      Mention that this is a digital summon from the ANU Student Judicial Board.
+      The letter should be professional, brief, and instruct them to log into the SJB DOCKET app for full details.
+      Do not include headers or footers, just the main body paragraph.`;
+
+      const aiResponse = await model.generateContent(prompt);
+      const letterBody = aiResponse.response.text().trim();
+
+      // 2. Send Official Email
+      const mailOptions = {
+        from: '"ANU Student Judicial Board" <anustudentjudicialbody6@gmail.com>',
+        to: recipientEmail,
+        subject: `📜 OFFICIAL SUMMONS: ${caseTitle.toUpperCase()}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden;">
+            <div style="background-color: #0f172a; padding: 24px; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 20px; letter-spacing: 2px;">ANU SJB DOCKET</h1>
+              <p style="color: #10b981; margin: 4px 0 0; font-size: 10px; font-weight: bold; text-transform: uppercase;">Official Judicial Registry</p>
+            </div>
+            <div style="padding: 32px; background-color: #ffffff;">
+              <p style="color: #64748b; font-size: 12px; margin-bottom: 24px;">Date: ${new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+              <h2 style="color: #0f172a; font-size: 18px; margin-bottom: 16px;">Notice of Judicial Proceedings</h2>
+              <div style="color: #334155; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+                ${letterBody.replace(/\n/g, '<br>')}
+              </div>
+              <div style="background-color: #f8fafc; padding: 20px; border-radius: 12px; margin-bottom: 32px;">
+                <p style="margin: 0; font-size: 11px; color: #64748b; font-weight: bold; text-transform: uppercase;">Docket Reference</p>
+                <p style="margin: 4px 0 0; font-size: 16px; color: #059669; font-weight: bold;">${caseId}</p>
+              </div>
+              <a href="https://anu-sjb-docket.onrender.com" style="display: block; background-color: #059669; color: white; padding: 16px; text-align: center; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 14px;">Access Secure Docket</a>
+            </div>
+            <div style="padding: 24px; background-color: #f1f5f9; text-align: center; color: #94a3b8; font-size: 10px;">
+              This is an automated judicial dispatch. All Nation University Student Judicial Board.
+            </div>
+          </div>
+        `,
+      };
+
+      try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Judicial Email dispatched to ${recipientEmail}`);
+      } catch (emailErr) {
+        console.error('Email Dispatch Error:', emailErr);
+      }
+
+      // 3. Get the recipient's FCM token from Firestore for Push Notification
       let fcmToken = null;
       try {
         const userDoc = await admin.firestore().collection('users').where('email', '==', recipientEmail).get();
@@ -62,21 +119,13 @@ async function startServer() {
         console.warn('Could not fetch FCM token from DB:', dbErr);
       }
 
-      // 2. Use Gemini to generate a professional legal notice
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const prompt = `Generate a one-sentence urgent judicial alert for a person named ${recipientName}.
-      They have been summoned for "${caseTitle}". Tell them to open the ANU SJB DOCKET app immediately.`;
-
-      const aiResponse = await model.generateContent(prompt);
-      const bodyText = aiResponse.response.text().trim();
-
-      // 3. Send Push Notification if token exists
+      // 4. Send Push Notification if token exists
       if (fcmToken) {
         await admin.messaging().send({
           token: fcmToken,
           notification: {
             title: '📜 OFFICIAL JUDICIAL SUMMONS',
-            body: bodyText,
+            body: `You have been summoned regarding: ${caseTitle}. Open the app to respond.`,
           },
           data: {
             caseId: String(caseId),
@@ -91,18 +140,15 @@ async function startServer() {
           }
         });
         console.log(`Push notification sent to ${recipientName}`);
-      } else {
-        console.log(`No FCM token found for ${recipientEmail}. Logged only.`);
       }
 
       res.json({ 
         success: true, 
-        message: fcmToken ? 'Push notification dispatched.' : 'Summon logged (user offline).',
-        preview: bodyText
+        message: 'Judicial Summon dispatched via Email & Push.'
       });
     } catch (error) {
-      console.error('Notification Error:', error);
-      res.status(500).json({ error: 'Failed to process notification' });
+      console.error('Summons Notification Error:', error);
+      res.status(500).json({ error: 'Failed to process judicial dispatch' });
     }
   });
 

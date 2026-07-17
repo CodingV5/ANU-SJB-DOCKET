@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { jsPDF } from 'jspdf';
 import { NativeBiometric } from '@capgo/capacitor-native-biometric';
 import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 interface Case {
   id: string;
@@ -97,7 +99,35 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
     }
   };
 
-  const generateCertificate = (caseData: Case) => {
+  const saveOrSharePdf = async (doc: jsPDF, fileName: string) => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+        // Save to temporary directory first
+        const savedFile = await Filesystem.writeFile({
+          path: fileName,
+          data: pdfBase64,
+          directory: Directory.Cache
+        });
+
+        // Use Share API to let user save or send the document
+        await Share.share({
+          title: fileName,
+          text: 'Judicial Document from ANU SJB DOCKET',
+          url: savedFile.uri,
+          dialogTitle: 'Save or Share Document'
+        });
+      } catch (err) {
+        console.error("PDF Export failed:", err);
+        alert("Could not process PDF on this device.");
+      }
+    } else {
+      doc.save(fileName);
+    }
+  };
+
+  const generateCertificate = async (caseData: Case) => {
     const doc = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -107,42 +137,47 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
     // Use the official university letterhead image you provided
     const templateUrl = "https://r.jina.ai/i/0582046554b341f2987a070119e7a83d";
 
-    // 1. Draw the Background Template
-    doc.addImage(templateUrl, 'PNG', 0, 0, 210, 297);
+    try {
+      // 1. Draw the Background Template
+      doc.addImage(templateUrl, 'PNG', 0, 0, 210, 297);
 
-    // 2. Overlay Dynamic Date
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor("#000000");
-    const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-    doc.text(date, 52, 72); // Positioned next to "Date:" field in template
+      // 2. Overlay Dynamic Date
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor("#000000");
+      const date = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+      doc.text(date, 52, 72);
 
-    // 3. Overlay Final Directive (The core message)
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    const directive = caseData.finalDirective || "This case has been officially resolved following a formal judicial review.";
-    const splitDirective = doc.splitTextToSize(directive, 150);
-    doc.text(splitDirective, 30, 105); // Positioned under [TYPE YOUR OFFICIAL LETTER CONTENT]
+      // 3. Overlay Final Directive
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      const directive = caseData.finalDirective || "This case has been officially resolved following a formal judicial review.";
+      const splitDirective = doc.splitTextToSize(directive, 150);
+      doc.text(splitDirective, 30, 105);
 
-    // 4. Case Metadata (In the "Additional Paragraphs" section)
-    doc.setFont("helvetica", "bold");
-    doc.text("JUDICIAL REFERENCE DATA:", 30, 175);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Docket ID: ${caseData.id.toUpperCase()}`, 30, 182);
-    doc.text(`Subject: ${caseData.title}`, 30, 189);
-    doc.text(`Petitioner: ${caseData.petitionerName}`, 30, 196);
-    doc.text(`Counterparty: ${caseData.respondentName || 'Unspecified'}`, 30, 203);
+      // 4. Case Metadata
+      doc.setFont("helvetica", "bold");
+      doc.text("JUDICIAL REFERENCE DATA:", 30, 175);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text(`Docket ID: ${caseData.docketId || caseData.id.toUpperCase()}`, 30, 182);
+      doc.text(`Subject: ${caseData.title}`, 30, 189);
+      doc.text(`Petitioner: ${caseData.petitionerName}`, 30, 196);
+      doc.text(`Counterparty: ${caseData.respondentName || 'Unspecified'}`, 30, 203);
 
-    // 5. Official Attribution (Bottom)
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text("REGISTRAR, STUDENT JUDICIAL BODY", 105, 260, { align: "center" });
+      // 5. Official Attribution
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("REGISTRAR, STUDENT JUDICIAL BODY", 105, 260, { align: "center" });
 
-    doc.save(`Official_Directive_${caseData.id.slice(0, 8)}.pdf`);
+      await saveOrSharePdf(doc, `Official_Directive_${caseData.id.slice(0, 8)}.pdf`);
+    } catch (e) {
+      console.error("Certificate error:", e);
+      alert("Error generating certificate.");
+    }
   };
 
-  const exportFullCaseFile = (caseData: Case) => {
+  const exportFullCaseFile = async (caseData: Case) => {
     const doc = new jsPDF();
     let yPos = 20;
 
@@ -226,7 +261,7 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
       });
     }
 
-    doc.save(`Full_Dossier_${caseData.docketId?.replace(/\//g, '_') || caseData.id.slice(0, 8)}.pdf`);
+    await saveOrSharePdf(doc, `Full_Dossier_${caseData.id.slice(0, 8)}.pdf`);
   };
 
   useEffect(() => {
