@@ -20,6 +20,46 @@ const generateFileHash = async (file: File): Promise<string> => {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
 
+// Simple image compression helper
+const compressImage = async (file: File): Promise<Blob | File> => {
+  if (!file.type.startsWith('image/') || file.type === 'image/gif') return file;
+
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 1200;
+        const MAX_HEIGHT = 1200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob) => {
+          resolve(blob || file);
+        }, file.type, 0.7);
+      };
+    };
+  });
+};
+
 export default function CaseFiling({ user, onSuccess }: { user: any; onSuccess: () => void }) {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -41,28 +81,42 @@ export default function CaseFiling({ user, onSuccess }: { user: any; onSuccess: 
     if (!files || files.length === 0) return;
 
     setUploading(true);
-    const newEvidence = [...formData.evidence];
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
+    // Process all files in parallel instead of one-by-one
+    const uploadPromises = Array.from(files).map(async (file) => {
       try {
-        const hash = await generateFileHash(file);
+        // 1. Compress if it's an image to speed up upload
+        const processedFile = await compressImage(file);
+        const finalFile = processedFile instanceof Blob ? new File([processedFile], file.name, { type: file.type }) : processedFile;
+
+        // 2. Parallel Hash & Path Setup
+        const hashPromise = generateFileHash(finalFile);
         const storageRef = ref(storage, `evidence/${user.uid}/${Date.now()}_${file.name}`);
-        const snapshot = await uploadBytes(storageRef, file);
+
+        const hash = await hashPromise;
+        const snapshot = await uploadBytes(storageRef, finalFile);
         const downloadURL = await getDownloadURL(snapshot.ref);
-        newEvidence.push({
+
+        return {
           url: downloadURL,
           category: 'Other',
           name: file.name,
           hash: hash
-        });
+        };
       } catch (error) {
-        console.error("Upload error:", error);
-        alert(`Failed to upload ${file.name}`);
+        console.error(`Upload error for ${file.name}:`, error);
+        return null;
       }
-    }
+    });
 
-    setFormData({ ...formData, evidence: newEvidence });
+    const results = await Promise.all(uploadPromises);
+    const successfulUploads = results.filter((res): res is EvidenceArtifact => res !== null);
+
+    setFormData(prev => ({
+      ...prev,
+      evidence: [...prev.evidence, ...successfulUploads]
+    }));
+
     setUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
