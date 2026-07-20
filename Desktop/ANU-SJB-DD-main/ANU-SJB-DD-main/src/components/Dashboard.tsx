@@ -100,30 +100,31 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
   };
 
   const saveOrSharePdf = async (doc: jsPDF, fileName: string) => {
-    if (Capacitor.isNativePlatform()) {
-      try {
+    try {
+      if (Capacitor.isNativePlatform()) {
         const pdfBase64 = doc.output('datauristring').split(',')[1];
 
-        // Save to temporary directory first
-        const savedFile = await Filesystem.writeFile({
+        await Filesystem.writeFile({
           path: fileName,
           data: pdfBase64,
           directory: Directory.Cache
         });
 
-        // Use Share API to let user save or send the document
+        const uriResult = await Filesystem.getUri({
+          directory: Directory.Cache,
+          path: fileName
+        });
+
         await Share.share({
           title: fileName,
-          text: 'Judicial Document from ANU SJB DOCKET',
-          url: savedFile.uri,
-          dialogTitle: 'Save or Share Document'
+          url: uriResult.uri,
         });
-      } catch (err) {
-        console.error("PDF Export failed:", err);
-        alert("Could not process PDF on this device.");
+      } else {
+        doc.save(fileName);
       }
-    } else {
-      doc.save(fileName);
+    } catch (err) {
+      console.error("PDF Save/Share Error:", err);
+      alert("Error finalizing document. Please try again.");
     }
   };
 
@@ -134,12 +135,21 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
       format: 'a4'
     });
 
-    // Use the official university letterhead image you provided
     const templateUrl = "https://r.jina.ai/i/0582046554b341f2987a070119e7a83d";
 
     try {
+      // Pre-load image as base64 to avoid native CORs issues
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.src = templateUrl;
+
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error("Could not load university letterhead."));
+      });
+
       // 1. Draw the Background Template
-      doc.addImage(templateUrl, 'PNG', 0, 0, 210, 297);
+      doc.addImage(img, 'PNG', 0, 0, 210, 297);
 
       // 2. Overlay Dynamic Date
       doc.setFont("helvetica", "bold");
@@ -172,8 +182,8 @@ export default function Dashboard({ user, initialCaseId, onModalClose }: { user:
 
       await saveOrSharePdf(doc, `Official_Directive_${caseData.id.slice(0, 8)}.pdf`);
     } catch (e) {
-      console.error("Certificate error:", e);
-      alert("Error generating certificate.");
+      console.error("Certificate generation error:", e);
+      alert("Error generating certificate. Check network connection.");
     }
   };
 
